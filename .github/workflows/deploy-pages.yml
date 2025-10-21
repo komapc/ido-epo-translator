@@ -36,6 +36,9 @@ jobs:
       - name: Build for GitHub Pages
         run: npm run build:pages
 
+      - name: Add .nojekyll file
+        run: touch ./dist/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
