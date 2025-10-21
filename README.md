@@ -1,6 +1,6 @@
-# Vortaro - Ido-Esperanto Online Dictionary
+# Ido-Esperanto Web Translator
 
-**Vortaro** (Ido for "dictionary") is a modern web application for translating between Ido and Esperanto, powered by Apertium machine translation. It features text translation, full webpage translation with side-by-side comparison, and real-time dictionary updates.
+A modern web application for translating between Ido and Esperanto, powered by Apertium machine translation. Features text translation, full webpage translation with side-by-side comparison, and real-time dictionary updates.
 
 **🌐 Live Application:** https://ido-epo-translator.pages.dev  
 **📚 Documentation:** [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)  

@@ -1,7 +1,7 @@
 {
-  "name": "vortaro",
+  "name": "ido-epo-translator",
   "version": "1.0.0",
-  "description": "Vortaro - Online Ido-Esperanto Dictionary and Translator",
+  "description": "Ido-Esperanto Web Translator - Full-featured translation with Apertium",
   "private": true,
   "type": "module",
   "scripts": {

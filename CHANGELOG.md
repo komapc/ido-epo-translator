@@ -1,11 +1,16 @@
 # Changelog
 
-All notable changes to Vortaro will be documented in this file.
+All notable changes to Ido-Esperanto Web Translator will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+- Repository renamed from `vortaro` to `ido-epo-translator`
+- Name clarification: this is the full Apertium-powered translator
+- `vortaro` name reserved for future simple dictionary app
 
 ### Added
 - GitHub Pages deployment workflow
