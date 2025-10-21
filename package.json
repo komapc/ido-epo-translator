@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "VITE_APP_VERSION=$npm_package_version tsc && vite build",
+    "build:pages": "VITE_APP_VERSION=$npm_package_version tsc && vite build --base=/vortaro/",
     "preview": "vite preview",
     "cf:dev": "wrangler dev --assets dist",
     "cf:deploy": "wrangler deploy",
