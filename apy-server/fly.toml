@@ -1,0 +1,39 @@
+app = "ido-epo-apy"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "2737"
+
+[[services]]
+  internal_port = 2737
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = "15s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/" 
+    timeout = "2s"
+
+[checks]
+  [checks.health]
+    port = 2737
+    type = "tcp"
+    interval = "15s"
+    timeout = "2s"
+
+[vm]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+

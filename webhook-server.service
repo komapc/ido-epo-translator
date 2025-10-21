@@ -1,0 +1,25 @@
+[Unit]
+Description=Apertium Rebuild Webhook Server
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/ido-epo-translator
+ExecStart=/usr/bin/node /opt/ido-epo-translator/webhook-server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=apertium-webhook
+
+# Environment variables
+Environment="PORT=9100"
+Environment="NODE_ENV=production"
+# Set REBUILD_SHARED_SECRET via systemd override or environment file
+# EnvironmentFile=-/opt/ido-epo-translator/.env
+
+[Install]
+WantedBy=multi-user.target
+

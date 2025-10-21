@@ -1,0 +1,50 @@
+name: Deploy Firebase Hosting and Functions
+
+# DISABLED: Project now uses Cloudflare Workers (_worker.js) instead of Firebase Functions
+# This workflow is kept for reference but will not run
+on:
+  workflow_dispatch:
+    inputs:
+      enable:
+        description: 'Disabled - project uses Cloudflare Workers'
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Install frontend deps
+        run: |
+          npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Install functions deps
+        working-directory: functions
+        run: npm ci && npm run build
+
+      - name: Set Functions config
+        run: |
+          firebase functions:config:set \
+            apy.server_url="${{ secrets.APY_SERVER_URL }}" \
+            admin.password="${{ secrets.ADMIN_PASSWORD }}" \
+            --project ${{ secrets.FIREBASE_PROJECT_ID }}
+
+      - name: Firebase Deploy
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase deploy --project ${{ secrets.FIREBASE_PROJECT_ID }} --only hosting,functions
+

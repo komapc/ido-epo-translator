@@ -1,0 +1,103 @@
+name: Deploy APy to AWS App Runner
+
+on:
+  push:
+    branches: [ main, feat/** ]
+    paths:
+      - 'apy-server/**'
+      - '.github/workflows/deploy-apyrunner.yml'
+  workflow_dispatch: {}
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY || 'ido-epo-apy' }}
+  APP_RUNNER_SERVICE_NAME: ${{ secrets.APP_RUNNER_SERVICE_NAME || 'ido-epo-apy' }}
+
+jobs:
+  build-and-deploy-apyrunner:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: vars
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::12}
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" || \
+          aws ecr create-repository --repository-name "$ECR_REPOSITORY"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apy-server
+          push: true
+          tags: ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.IMAGE_TAG }}
+
+      - name: Resolve ECR image URI
+        id: image
+        run: |
+          echo "URI=${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to App Runner (create or update)
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_URI="${{ steps.image.outputs.URI }}"
+          SERVICE_NAME="${{ env.APP_RUNNER_SERVICE_NAME }}"
+
+          EXIST=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${SERVICE_NAME}'].ServiceArn" --output text || true)
+          if [ -z "$EXIST" ]; then
+            echo "Creating App Runner service $SERVICE_NAME"
+            aws apprunner create-service \
+              --service-name "$SERVICE_NAME" \
+              --source-configuration "{\
+                \"ImageRepository\":{\
+                  \"ImageIdentifier\":\"$IMAGE_URI\",\
+                  \"ImageRepositoryType\":\"ECR\",\
+                  \"ImageConfiguration\":{\
+                    \"Port\":\"2737\"\
+                  }\
+                },\
+                \"AutoDeploymentsEnabled\":true\
+              }" \
+              --instance-configuration "{\"Cpu\":\"1 vCPU\",\"Memory\":\"2 GB\"}"
+          else
+            echo "Updating App Runner service $SERVICE_NAME"
+            aws apprunner update-service \
+              --service-arn "$EXIST" \
+              --source-configuration "{\
+                \"ImageRepository\":{\
+                  \"ImageIdentifier\":\"$IMAGE_URI\",\
+                  \"ImageRepositoryType\":\"ECR\",\
+                  \"ImageConfiguration\":{\
+                    \"Port\":\"2737\"\
+                  }\
+                }\
+              }"
+          fi
+
+      - name: Output service URL
+        run: |
+          ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE_NAME }}'].ServiceArn" --output text)
+          URL=$(aws apprunner describe-service --service-arn "$ARN" --query "Service.ServiceUrl" --output text)
+          echo "App Runner URL: $URL"
+
