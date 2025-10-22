@@ -88,7 +88,7 @@
 - **Production App:** https://ido-epo-translator.pages.dev
 - **APy Server:** http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com
 - **Rebuild Webhook:** http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/rebuild
-- **GitHub Repo:** https://github.com/komapc/vortaro
+- **GitHub Repo:** https://github.com/komapc/ido-epo-translator
 
 ---
 

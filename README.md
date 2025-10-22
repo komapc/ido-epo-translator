@@ -57,8 +57,8 @@ A modern web application for translating between Ido and Esperanto, powered by A
 ### 1. Clone and Install Dependencies
 
 ```bash
-git clone https://github.com/komapc/vortaro.git
-cd vortaro
+git clone https://github.com/komapc/ido-epo-translator.git
+cd ido-epo-translator
 
 # Install dependencies
 npm install
@@ -128,7 +128,7 @@ REBUILD_WEBHOOK_URL = http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/
 
 ```bash
 ssh ubuntu@<YOUR_EC2_IP>
-curl -o setup-ec2.sh https://raw.githubusercontent.com/komapc/vortaro/main/setup-ec2.sh
+curl -o setup-ec2.sh https://raw.githubusercontent.com/komapc/ido-epo-translator/main/setup-ec2.sh
 chmod +x setup-ec2.sh
 ./setup-ec2.sh
 # After build (10–15 min)
@@ -211,7 +211,7 @@ curl -X POST http://127.0.0.1:8787/api/translate \
 ## 📁 Project Structure
 
 ```
-vortaro/
+ido-epo-translator/
 ├── src/                      # React frontend source
 │   ├── components/           # React components
 │   │   ├── TextTranslator.tsx

@@ -36,5 +36,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package name updated to `vortaro`
 - Fresh version numbering starting at 1.0.0
 
-[1.0.0]: https://github.com/komapc/vortaro/releases/tag/v1.0.0
+[1.0.0]: https://github.com/komapc/ido-epo-translator/releases/tag/v1.0.0
 
