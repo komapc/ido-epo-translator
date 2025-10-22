@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Fixed
+- Fixed Dockerfile deployment failure by removing non-existent apt packages (apertium-ido, apertium-ido-epo)
+- Updated Dockerfile to clone from komapc/apertium-ido instead of non-existent apertium/apertium-ido
+- Added build-from-source for apertium-ido and apertium-ido-epo to ensure latest versions with fixes
+
+- Fixed number recognition in Ido morphological analysis - numbers now properly categorized as numerals instead of nouns
+
 - Fixed rebuild button mechanism after repository rename from `vortaro` to `ido-epo-translator`
 - Updated `apy-server/Dockerfile` to include git repositories and rebuild scripts for local development
 - Corrected broken GitHub URL in `rebuild-self-updating.sh`
