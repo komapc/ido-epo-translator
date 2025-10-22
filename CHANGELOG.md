@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Remove unused CI workflows (APy to App Runner/EC2/Fly.io, Firebase, GitHub Pages)
+
 ### Changed
 - Repository renamed from `vortaro` to `ido-epo-translator`
 - Name clarification: this is the full Apertium-powered translator
 - `vortaro` name reserved for future simple dictionary app
 
 ### Added
-- GitHub Pages deployment workflow
-- `build:pages` script for GitHub Pages builds
+- `build:pages` script for GitHub Pages builds (now deprecated after Cloudflare adoption)
 
 ## [1.0.0] - 2025-10-21
 
