@@ -7,10 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed rebuild button mechanism after repository rename from `vortaro` to `ido-epo-translator`
+- Updated `apy-server/Dockerfile` to include git repositories and rebuild scripts for local development
+- Corrected broken GitHub URL in `rebuild-self-updating.sh`
+- Fixed docker-compose.yml volume mounts to point to correct paths
+- Added build tools and apertium-all-dev to Docker image for rebuild capability
+
+### Changed
+- Docker setup now supports rebuild functionality both locally and in production
+- Updated apy-server/README.md with comprehensive documentation of deployment modes
+- Clarified difference between development and production Docker setups
+- Volume mounts in docker-compose.yml are now optional and commented out by default
+
 ### Removed
 - Remove unused CI workflows (APy to App Runner/EC2/Fly.io, Firebase, GitHub Pages)
 
-### Changed
+### Changed (Repository)
 - Repository renamed from `vortaro` to `ido-epo-translator`
 - Name clarification: this is the full Apertium-powered translator
 - `vortaro` name reserved for future simple dictionary app

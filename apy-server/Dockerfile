@@ -1,6 +1,9 @@
 FROM debian:bookworm-slim
 
-# Install base dependencies
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Install base dependencies + build tools
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
@@ -9,17 +12,40 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     git \
+    build-essential \
+    autoconf \
+    automake \
+    libtool \
+    pkg-config \
+    libxml2-dev \
+    libxml2-utils \
+    xsltproc \
+    flex \
+    libicu-dev \
+    gawk \
     && rm -rf /var/lib/apt/lists/*
 
-# Add Apertium nightly apt repo and install engine + language packages
+# Add Apertium nightly apt repo and install engine + dev tools
 RUN curl -sS https://apertium.projectjj.com/apt/install-nightly.sh | bash && \
     apt-get update && apt-get install -y \
       apertium \
       lttoolbox \
+      apertium-all-dev \
       apertium-ido \
       apertium-epo \
       apertium-ido-epo \
       && rm -rf /var/lib/apt/lists/*
+
+# Clone git repositories for rebuild capability
+WORKDIR /opt/apertium
+RUN git clone https://github.com/apertium/apertium-ido.git && \
+    git clone https://github.com/apertium/apertium-epo.git && \
+    git clone https://github.com/komapc/apertium-ido-epo.git
+
+# Copy rebuild scripts
+COPY rebuild.sh /opt/apertium/rebuild.sh
+COPY rebuild-self-updating.sh /opt/apertium/rebuild-self-updating.sh
+RUN chmod +x /opt/apertium/rebuild.sh /opt/apertium/rebuild-self-updating.sh
 
 # Install APy (Apertium APy server)
 WORKDIR /opt
