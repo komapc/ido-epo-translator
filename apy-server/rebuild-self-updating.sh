@@ -4,7 +4,7 @@
 
 set -e
 
-SCRIPT_URL="https://raw.githubusercontent.com/komapc/vortaro/main/apy-server/rebuild-self-updating.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/komapc/ido-epo-translator/main/apy-server/rebuild-self-updating.sh"
 SCRIPT_PATH="/opt/apertium/rebuild.sh"
 
 echo "=== Apertium Ido-Esperanto Rebuild ==="

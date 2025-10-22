@@ -17,8 +17,11 @@ services:
       start_period: 60s
     environment:
       - APY_TIMEOUT=10
-    volumes:
-      # Mount local repos for development (optional)
-      - ../../apertium-ido:/opt/apertium/apertium-ido-dev:ro
-      - ../../apertium-ido-epo:/opt/apertium/apertium-ido-epo-dev:ro
+    # Note: Volume mounts are optional for local development
+    # They allow testing dictionary changes without rebuilding the container
+    # Uncomment if your directory structure matches these paths:
+    # volumes:
+    #   - ../../../apertium-ido-epo/vendor/apertium-ido:/opt/apertium/apertium-ido-dev:ro
+    #   - ../../../apertium-ido-epo/vendor/apertium-epo:/opt/apertium/apertium-epo-dev:ro
+    #   - ../../../apertium-ido-epo/apertium/apertium-ido-epo:/opt/apertium/apertium-ido-epo-dev:ro
 
