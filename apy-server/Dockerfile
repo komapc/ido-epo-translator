@@ -31,16 +31,19 @@ RUN curl -sS https://apertium.projectjj.com/apt/install-nightly.sh | bash && \
       apertium \
       lttoolbox \
       apertium-all-dev \
-      apertium-ido \
       apertium-epo \
-      apertium-ido-epo \
       && rm -rf /var/lib/apt/lists/*
 
-# Clone git repositories for rebuild capability
+# Clone and build custom dictionaries from GitHub
 WORKDIR /opt/apertium
-RUN git clone https://github.com/apertium/apertium-ido.git && \
+RUN git clone https://github.com/komapc/apertium-ido.git && \
+    cd apertium-ido && \
+    ./autogen.sh && make && make install && \
+    cd .. && \
     git clone https://github.com/apertium/apertium-epo.git && \
-    git clone https://github.com/komapc/apertium-ido-epo.git
+    git clone https://github.com/komapc/apertium-ido-epo.git && \
+    cd apertium-ido-epo && \
+    ./autogen.sh && make && make install
 
 # Copy rebuild scripts
 COPY rebuild.sh /opt/apertium/rebuild.sh
