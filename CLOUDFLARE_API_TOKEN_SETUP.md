@@ -66,14 +66,15 @@ You should see your account information.
 
 ### Add to GitHub Secrets
 
-1. Go to: https://github.com/komapc/vortaro/settings/secrets/actions
+1. Go to: https://github.com/komapc/ido-epo-translator/settings/secrets/actions
 2. Click: **New repository secret**
 3. Name: `CLOUDFLARE_API_TOKEN`
 4. Value: [paste your token]
 5. Click: **Add secret**
 
 Also add:
-- `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
+- Name: `CLOUDFLARE_ACCOUNT_ID`
+- Value: Your Cloudflare account ID (found in Workers dashboard)
 
 ### Current Error
 
