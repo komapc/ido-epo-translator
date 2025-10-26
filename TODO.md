@@ -4,39 +4,57 @@
 
 ## 🎯 Current Priority
 
-### 🚨 0. Configure GitHub Secrets (BLOCKING)
-**Status:** Required for deployment
-**Priority:** CRITICAL
-**Time:** 5-10 minutes
+### ~~🚨 0. Configure GitHub Secrets~~ ✅ COMPLETE
+**Status:** ✅ **IMPLEMENTED** - Deployments working since Oct 22-23  
+**Evidence:** Multiple successful deployments in GitHub Actions
 
-- [ ] **Add CLOUDFLARE_API_TOKEN to GitHub Secrets**
-  - Go to: https://github.com/komapc/ido-epo-translator/settings/secrets/actions
-  - Create token at: https://dash.cloudflare.com/profile/api-tokens
-  - Required permissions: Workers Scripts: Edit
-  - See: `CLOUDFLARE_API_TOKEN_SETUP.md` for detailed instructions
-  
-- [ ] **Add CLOUDFLARE_ACCOUNT_ID to GitHub Secrets**
-  - Find in: Cloudflare Dashboard → Workers section
-  - 32-character hex string
-  
-- [ ] **Test Automated Deployment**
-  - Re-run failed GitHub Actions workflow
-  - Verify worker deploys successfully
-  - Check health endpoint: `/api/health`
+- ✅ Added `CLOUDFLARE_API_TOKEN` to GitHub Secrets
+- ✅ Added `CLOUDFLARE_ACCOUNT_ID` to GitHub Secrets
+- ✅ Deployment workflow working successfully
 
-**Impact:** Blocking all automated Cloudflare Worker deployments  
+**Impact:** Automated Cloudflare Worker deployments now working  
 **Documentation:** `DEPLOYMENT_FIX_NEEDED.md`
 
 ---
 
-### 1. Improve Deployment (Rebuilding New Dictionaries)
-**Status:** Planning
-**Priority:** High
+### 🔴 0. Dictionary Quality Issues (BLOCKING TRANSLATION QUALITY)
+**Status:** ❌ **CRITICAL** - Depends on extractor fixes  
+**Priority:** CRITICAL  
+**Time:** Depends on extractor team  
+**Impact:** Poor translation quality, missing features
+
+**Root Cause:** Extractor creates incomplete and corrupted dictionaries:
+- ❌ **Missing morphological rules** - No verb participles, limited adjective forms
+- ❌ **Corrupted bilingual entries** - Metadata in translations (e.g., `du` → `du Kategorio:Eo DU{wikt_io}`)
+
+**Dependencies:**
+- [ ] **Wait for extractor morphological integration fix** (`projects/extractor/TODO.md` #0)
+- [ ] **Wait for extractor data corruption fix** (`projects/extractor/TODO.md` #1)
+- [ ] **Deploy fixed dictionaries to APy server**
+- [ ] **Test translation quality improvements**
+
+**Cannot proceed with translation improvements until extractor issues are resolved.**
+
+**Files to monitor:**
+- `projects/extractor/TODO.md` - Critical fixes in progress
+- `EXTRACTOR_MORPHOLOGY_ANALYSIS.md` - Detailed issue analysis
+
+---
+
+### 1. Improve Deployment (After Extractor Fixes)
+**Status:** Waiting for extractor fixes  
+**Priority:** High (after dictionary quality is resolved)  
+**Dependencies:** Extractor morphological integration and data cleaning
 
 #### Current Issues:
-The current deployment process for updating dictionaries on the production APy server needs improvement. When new dictionaries are extracted, they need to be deployed to EC2 efficiently.
+The current deployment process works but deploys incomplete/corrupted dictionaries from the extractor.
 
-#### Goals:
+#### Goals (After Extractor Fixes):
+- [ ] **Deploy Fixed Dictionaries**
+  - Wait for complete dictionaries with morphological rules
+  - Deploy clean bilingual dictionaries without metadata corruption
+  - Test translation quality improvements
+
 - [ ] **Automated Dictionary Updates**
   - Automatic detection of new dictionary versions
   - Trigger rebuild when extractor produces new .dix files
@@ -47,7 +65,10 @@ The current deployment process for updating dictionaries on the production APy s
   - Target: <3 minutes for dictionary-only updates
   - Investigate: Pre-compiled dictionary swapping
 
-- [ ] **Better Rebuild Button**
+- [ ] **Enhanced Rebuild Button**
+  - Show dictionary version information
+  - Display quality metrics (entries count, morphological features)
+  - Progress tracking for rebuild process
   - Currently: Manual trigger, shows progress
   - Needs: Smart detection (don't rebuild if unnecessary)
   - Status: ✅ Already implemented (checks for updates first)
@@ -246,6 +267,13 @@ systemctl reload apy
 ## 💡 Additional Improvements (Lower Priority)
 
 ### UI Enhancements:
+- [ ] **Add Google Analytics**
+  - Implement Google Analytics 4 (GA4) tracking
+  - Track translation usage patterns (language pairs, volume)
+  - Monitor user engagement and session duration
+  - Privacy-compliant implementation (no personal data)
+  - Add to both web interface and API endpoints
+  - Expected: Better insights into translator usage
 - [ ] Show dictionary version in footer (commit SHA + date)
 - [ ] "Dictionary last updated: 2 hours ago"
 - [ ] Admin panel: View dictionary stats (word count, source breakdown)
