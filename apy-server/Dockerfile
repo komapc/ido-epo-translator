@@ -38,12 +38,15 @@ RUN curl -sS https://apertium.projectjj.com/apt/install-nightly.sh | bash && \
 WORKDIR /opt/apertium
 RUN git clone https://github.com/komapc/apertium-ido.git && \
     cd apertium-ido && \
-    ./autogen.sh && make && make install && \
+    ./autogen.sh && ./configure && make && make install && \
     cd .. && \
     git clone https://github.com/apertium/apertium-epo.git && \
+    cd apertium-epo && \
+    ./autogen.sh && ./configure && make && make install && \
+    cd .. && \
     git clone https://github.com/komapc/apertium-ido-epo.git && \
     cd apertium-ido-epo && \
-    ./autogen.sh && make && make install
+    ./autogen.sh && ./configure && make && make install
 
 # Copy rebuild scripts
 COPY rebuild.sh /opt/apertium/rebuild.sh
@@ -54,7 +57,7 @@ RUN chmod +x /opt/apertium/rebuild.sh /opt/apertium/rebuild-self-updating.sh
 WORKDIR /opt
 RUN git clone https://github.com/apertium/apertium-apy.git && \
     cd apertium-apy && \
-    pip3 install --break-system-packages -r requirements.txt
+    pip3 install --break-system-packages apertium-streamparser chardet requests tornado commentjson lxml fasttext-wheel==0.9.2
 
 # Expose APy port
 EXPOSE 2737
@@ -63,7 +66,7 @@ EXPOSE 2737
 RUN echo '#!/bin/bash\n\
 set -e\n\
 cd /opt/apertium-apy\n\
-python3 servlet.py -p 2737 -j1\n\
+python3 apy.py -p 2737 -j1 /usr/local/share/apertium/modes/\n\
 ' > /start.sh && chmod +x /start.sh
 
 WORKDIR /opt/apertium-apy
