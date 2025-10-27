@@ -10,7 +10,6 @@ A modern web application for translating between Ido and Esperanto, powered by A
 
 ### Translation Features
 - **Text Translation**: Translate phrases and sentences between Ido and Esperanto
-- **URL Translation**: Translate entire webpages (e.g., Wikipedia articles) with side-by-side comparison
 - **Bidirectional**: Switch translation direction with one click
 - **Color-coded Output**: Visual quality indicators
   - 🔴 Red: Unknown words (*)
@@ -20,11 +19,12 @@ A modern web application for translating between Ido and Esperanto, powered by A
 - **Toggle Display**: Switch between color mode and symbol mode
 
 ### Infrastructure Features
-- **Smart Rebuild Button**: Trigger dictionary updates on EC2
-  - Checks for updates before rebuilding (prevents unnecessary rebuilds)
-  - Real-time progress indicator with elapsed timer (MM:SS)
-  - Progress bar (estimated 5-minute completion)
-  - "Up to date" notification when no rebuild needed
+- **Dictionary Management**: Comprehensive dictionary management dialog
+  - View all repository versions and build dates
+  - Individual pull and build operations for each repository
+  - Real-time status updates and progress indicators
+  - Direct GitHub links for each repository
+  - Smart update detection (only rebuild what's changed)
 - **Version Display**: Footer shows app version `vX.Y.Z`
 - **Dictionary Versions**: Shows latest versions of `apertium-ido`, `apertium-epo`, and `apertium-ido-epo`
 - **Modern UI**: Beautiful, responsive interface built with React and TailwindCSS
@@ -146,26 +146,51 @@ ADMIN_PASSWORD = <your-strong-secret>
 
 ## 🔄 Updating Translation Dictionaries
 
-### Option 1: Via Rebuild Button (Manual Trigger)
+### Option 1: Via Dictionaries Dialog (Recommended)
 
 1. Open the web app
-2. Click "Rebuild"
-3. The EC2 webhook will run `update-dictionaries.sh` and rebuild only if changes are detected
+2. Click "Dictionaries" button
+3. View repository status and versions
+4. Click "Pull Updates" for repositories that need updates
+5. Click "Build & Install" for repositories that need rebuilding
+6. Restart APy server if needed: `docker-compose restart`
 
 ### Option 2: Via Docker (Local Development)
 
 ```bash
-# Rebuild inside the container
-docker exec ido-epo-apy /opt/apertium-ido-epo-local/rebuild.sh
+# Pull updates for specific repository
+docker exec ido-epo-apy /opt/apertium/pull-repo.sh ido
+docker exec ido-epo-apy /opt/apertium/pull-repo.sh epo
+docker exec ido-epo-apy /opt/apertium/pull-repo.sh bilingual
+
+# Build specific repository
+docker exec ido-epo-apy /opt/apertium/build-repo.sh ido
+docker exec ido-epo-apy /opt/apertium/build-repo.sh epo
+docker exec ido-epo-apy /opt/apertium/build-repo.sh bilingual
+
+# Or rebuild all (legacy)
+docker exec ido-epo-apy /opt/apertium/rebuild.sh
 
 # Restart the container
 docker-compose restart
 ```
 
-### Option 3: Via EC2 Webhook
+### Option 3: Via EC2 Webhook API
 
 ```bash
-# Trigger rebuild via API
+# Pull specific repository
+curl -X POST http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/pull-repo \
+  -H "Content-Type: application/json" \
+  -H "X-Rebuild-Token: YOUR_SHARED_SECRET" \
+  -d '{"repo": "ido"}'
+
+# Build specific repository
+curl -X POST http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/build-repo \
+  -H "Content-Type: application/json" \
+  -H "X-Rebuild-Token: YOUR_SHARED_SECRET" \
+  -d '{"repo": "ido"}'
+
+# Full rebuild (legacy)
 curl -X POST http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/rebuild \
   -H "Content-Type: application/json" \
   -H "X-Rebuild-Token: YOUR_SHARED_SECRET"

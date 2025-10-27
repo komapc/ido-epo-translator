@@ -1,16 +1,14 @@
 import { useState } from 'react'
-import { ArrowLeftRight } from 'lucide-react'
+import { ArrowLeftRight, Database } from 'lucide-react'
 import TextTranslator from './components/TextTranslator'
-import UrlTranslator from './components/UrlTranslator'
-import RebuildButton from './components/RebuildButton'
+import DictionariesDialog from './components/DictionariesDialog'
 import RepoVersions from './components/RepoVersions'
 
-type TranslationMode = 'text' | 'url'
 type LanguageDirection = 'ido-epo' | 'epo-ido'
 
 const App = () => {
-  const [mode, setMode] = useState<TranslationMode>('text')
   const [direction, setDirection] = useState<LanguageDirection>('ido-epo')
+  const [isDictionariesOpen, setIsDictionariesOpen] = useState(false)
 
   const handleSwapDirection = () => {
     setDirection(direction === 'ido-epo' ? 'epo-ido' : 'ido-epo')
@@ -29,59 +27,47 @@ const App = () => {
           </p>
         </header>
 
-        {/* Mode Selector */}
-        <div className="flex justify-center gap-4 mb-6">
+        {/* Admin Controls */}
+        <div className="flex justify-center mb-6">
           <button
-            onClick={() => setMode('text')}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              mode === 'text'
-                ? 'bg-[#1f3f7a] text-white shadow-lg scale-105'
-                : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
-            aria-label="Switch to text translation mode"
+            onClick={() => setIsDictionariesOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#1f7a3a] hover:bg-[#1a6a33] text-white font-medium rounded-lg transition-all"
+            aria-label="Manage dictionaries"
           >
-            Text Translation
+            <Database className="w-4 h-4" />
+            Dictionaries
           </button>
-          <button
-            onClick={() => setMode('url')}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              mode === 'url'
-                ? 'bg-[#1f7a3a] text-white shadow-lg scale-105'
-                : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
-            aria-label="Switch to URL translation mode"
-          >
-            URL Translation
-          </button>
-          <RebuildButton />
         </div>
 
         {/* Language Direction Selector */}
-        {(
-          <div className="flex justify-center items-center gap-4 mb-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center gap-4">
-              <span className="text-white font-medium">
-                {direction === 'ido-epo' ? 'Ido' : 'Esperanto'}
-              </span>
-              <button
-                onClick={handleSwapDirection}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all hover:scale-110"
-                aria-label="Swap translation direction"
-              >
-                <ArrowLeftRight className="w-5 h-5 text-white" />
-              </button>
-              <span className="text-white font-medium">
-                {direction === 'ido-epo' ? 'Esperanto' : 'Ido'}
-              </span>
-            </div>
+        <div className="flex justify-center items-center gap-4 mb-8">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center gap-4">
+            <span className="text-white font-medium">
+              {direction === 'ido-epo' ? 'Ido' : 'Esperanto'}
+            </span>
+            <button
+              onClick={handleSwapDirection}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all hover:scale-110"
+              aria-label="Swap translation direction"
+            >
+              <ArrowLeftRight className="w-5 h-5 text-white" />
+            </button>
+            <span className="text-white font-medium">
+              {direction === 'ido-epo' ? 'Esperanto' : 'Ido'}
+            </span>
           </div>
-        )}
+        </div>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto">
-          {mode === 'text' && <TextTranslator direction={direction} />}
-          {mode === 'url' && <UrlTranslator direction={direction} />}
+          <TextTranslator direction={direction} />
         </main>
+
+        {/* Dictionaries Dialog */}
+        <DictionariesDialog
+          isOpen={isDictionariesOpen}
+          onClose={() => setIsDictionariesOpen(false)}
+        />
 
         {/* Footer */}
         <footer className="text-center mt-12 text-white/80 text-sm">
@@ -109,4 +95,3 @@ const App = () => {
 }
 
 export default App
-
