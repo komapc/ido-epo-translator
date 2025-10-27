@@ -57,41 +57,58 @@ export default {
           const results = await Promise.all(repos.map(async ({ owner, repo, label }) => {
             const base = `https://api.github.com/repos/${owner}/${repo}`
             // Try latest release first
-            let version = null, date = null, commit = null
+            let version = null, buildDate = null, lastCommitDate = null, latestHash = null
             let ok = false
             try {
               const rel = await fetch(`${base}/releases/latest`, { headers: ghHeaders })
               if (rel.ok) {
                 const r = await rel.json()
                 version = r.tag_name || r.name || null
-                date = r.published_at || r.created_at || null
+                buildDate = r.published_at || r.created_at || null
                 ok = true
               }
-            } catch {}
-            if (!ok) {
-              try {
-                const commits = await fetch(`${base}/commits?per_page=1`, { headers: ghHeaders })
-                if (commits.ok) {
-                  const arr = await commits.json()
-                  if (Array.isArray(arr) && arr.length) {
-                    const c = arr[0]
-                    commit = c.sha
-                    date = c.commit?.committer?.date || c.commit?.author?.date || null
-                  }
+            } catch { }
+
+            // Always get latest commit info
+            try {
+              const commits = await fetch(`${base}/commits?per_page=1`, { headers: ghHeaders })
+              if (commits.ok) {
+                const arr = await commits.json()
+                if (Array.isArray(arr) && arr.length) {
+                  const c = arr[0]
+                  latestHash = c.sha
+                  lastCommitDate = c.commit?.committer?.date || c.commit?.author?.date || null
                 }
-              } catch {}
-              // As a last resort, use default branch updated_at
-              if (!date) {
-                try {
-                  const repoInfo = await fetch(base, { headers: ghHeaders })
-                  if (repoInfo.ok) {
-                    const info = await repoInfo.json()
-                    date = info.updated_at || info.pushed_at || null
-                  }
-                } catch {}
               }
+            } catch { }
+
+            // As a last resort for date, use default branch updated_at
+            if (!lastCommitDate && !buildDate) {
+              try {
+                const repoInfo = await fetch(base, { headers: ghHeaders })
+                if (repoInfo.ok) {
+                  const info = await repoInfo.json()
+                  lastCommitDate = info.updated_at || info.pushed_at || null
+                }
+              } catch { }
             }
-            return { label, owner, repo, version, date, commit }
+
+            return {
+              label,
+              owner,
+              repo,
+              version,
+              buildDate,
+              lastCommitDate,
+              latestHash,
+              // These would be populated by the server with actual deployed state
+              currentHash: null,
+              lastBuiltHash: null,
+              needsPull: false,
+              needsBuild: false,
+              isUpToDate: true,
+              githubUrl: `https://github.com/${owner}/${repo}`
+            }
           }))
           return sendJson(200, { appVersion: VERSION, repos: results })
         } catch (e) {
@@ -146,48 +163,81 @@ export default {
         }
       }
 
-      if (request.method === 'POST' && subpath === '/translate-url') {
+
+
+      if (request.method === 'POST' && subpath === '/admin/pull-repo') {
         try {
-          const body = await request.json().catch(() => ({}))
-          const pageUrl = body?.url
-          const direction = body?.direction
-          if (!pageUrl || !direction) return sendJson(400, { error: 'Missing URL or direction' })
-
-          // Be a good citizen: many sites require a UA; Wikipedia may 403 on missing UA
-          const pageRes = await fetch(pageUrl, {
-            headers: {
-              'User-Agent': 'IdoEpoTranslator/1.0 (+workers.cloudflare.com)'
-            }
-          })
-          if (!pageRes.ok) return sendJson(400, { error: 'Could not fetch URL', status: pageRes.status })
-          const html = await pageRes.text()
-          const textContent = extractTextFromHtml(html)
-          if (!textContent.trim()) return sendJson(400, { error: 'No text content found in URL' })
-
-          const langPair = direction === 'ido-epo' ? 'ido|epo' : 'epo|ido'
-
-          // Chunk long texts to avoid APy limits and timeouts
-          const chunks = chunkText(textContent, 1800) // safe margin under 2k
-          const translatedParts = []
-          for (const chunk of chunks) {
-            const res = await fetch(`${APY_SERVER_URL}/translate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: new URLSearchParams({ q: chunk, langpair: langPair }),
-            })
-            if (!res.ok) return sendJson(502, { error: 'Translation service error (chunk)', status: res.status })
-            const data = await res.json().catch(() => ({}))
-            translatedParts.push(data.responseData?.translatedText ?? chunk)
+          if (!env.REBUILD_WEBHOOK_URL) {
+            return sendJson(500, { error: 'Rebuild webhook URL not configured' })
           }
 
-          return sendJson(200, {
-            original: textContent.substring(0, 50000),
-            translation: translatedParts.join(' '),
-            url: pageUrl,
-            chunks: chunks.length,
+          const body = await request.json().catch(() => ({}))
+          const repo = body?.repo
+          if (!repo || !['ido', 'epo', 'bilingual'].includes(repo)) {
+            return sendJson(400, { error: 'Invalid repo parameter. Must be: ido, epo, or bilingual' })
+          }
+
+          const webhookRes = await fetch(env.REBUILD_WEBHOOK_URL.replace('/rebuild', '/pull-repo'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '',
+            },
+            body: JSON.stringify({ repo, trigger: 'web-ui' }),
           })
+          const text = await webhookRes.text().catch(() => '')
+          if (!webhookRes.ok) {
+            return sendJson(502, {
+              error: 'Failed to trigger repository pull',
+              details: `Webhook returned ${webhookRes.status}`,
+              webhookUrl: env.REBUILD_WEBHOOK_URL,
+              body: text?.slice(0, 2000),
+            })
+          }
+          // Try parse JSON, else wrap as text
+          let responseBody
+          try { responseBody = JSON.parse(text) } catch { responseBody = { status: 'ok', log: text?.slice(0, 5000) } }
+          return sendJson(200, { status: 'success', repo, ...responseBody })
         } catch (e) {
-          return sendJson(500, { error: 'URL translation failed', details: e?.message })
+          return sendJson(500, { error: 'Pull trigger failed', details: e?.message })
+        }
+      }
+
+      if (request.method === 'POST' && subpath === '/admin/build-repo') {
+        try {
+          if (!env.REBUILD_WEBHOOK_URL) {
+            return sendJson(500, { error: 'Rebuild webhook URL not configured' })
+          }
+
+          const body = await request.json().catch(() => ({}))
+          const repo = body?.repo
+          if (!repo || !['ido', 'epo', 'bilingual'].includes(repo)) {
+            return sendJson(400, { error: 'Invalid repo parameter. Must be: ido, epo, or bilingual' })
+          }
+
+          const webhookRes = await fetch(env.REBUILD_WEBHOOK_URL.replace('/rebuild', '/build-repo'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '',
+            },
+            body: JSON.stringify({ repo, trigger: 'web-ui' }),
+          })
+          const text = await webhookRes.text().catch(() => '')
+          if (!webhookRes.ok) {
+            return sendJson(502, {
+              error: 'Failed to trigger repository build',
+              details: `Webhook returned ${webhookRes.status}`,
+              webhookUrl: env.REBUILD_WEBHOOK_URL,
+              body: text?.slice(0, 2000),
+            })
+          }
+          // Try parse JSON, else wrap as text
+          let responseBody
+          try { responseBody = JSON.parse(text) } catch { responseBody = { status: 'ok', log: text?.slice(0, 5000) } }
+          return sendJson(202, { status: 'accepted', repo, message: 'Build started successfully', ...responseBody })
+        } catch (e) {
+          return sendJson(500, { error: 'Build trigger failed', details: e?.message })
         }
       }
 
@@ -240,20 +290,6 @@ export default {
   },
 }
 
-function extractTextFromHtml(html) {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .substring(0, 5000)
-}
 
-function chunkText(text, size) {
-  const out = []
-  for (let i = 0; i < text.length; i += size) out.push(text.slice(i, i + size))
-  return out
-}
 
 

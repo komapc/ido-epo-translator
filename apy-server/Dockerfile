@@ -51,7 +51,9 @@ RUN git clone https://github.com/komapc/apertium-ido.git && \
 # Copy rebuild scripts
 COPY rebuild.sh /opt/apertium/rebuild.sh
 COPY rebuild-self-updating.sh /opt/apertium/rebuild-self-updating.sh
-RUN chmod +x /opt/apertium/rebuild.sh /opt/apertium/rebuild-self-updating.sh
+COPY pull-repo.sh /opt/apertium/pull-repo.sh
+COPY build-repo.sh /opt/apertium/build-repo.sh
+RUN chmod +x /opt/apertium/rebuild.sh /opt/apertium/rebuild-self-updating.sh /opt/apertium/pull-repo.sh /opt/apertium/build-repo.sh
 
 # Install APy (Apertium APy server)
 WORKDIR /opt

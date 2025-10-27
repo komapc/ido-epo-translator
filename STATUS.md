@@ -24,7 +24,6 @@
 
 ### Translation Features
 - ✅ **Text Translation** - Bidirectional Ido ↔ Esperanto
-- ✅ **URL Translation** - Translate full webpages (e.g., Wikipedia)
 - ✅ **Side-by-side Comparison** - Original and translated text
 - ✅ **Color-coded Output** - Visual indication of translation quality
   - 🔴 Red: Unknown words (*)
@@ -33,11 +32,12 @@
 - ✅ **Translation Quality Score** - Percentage of correctly translated words
 
 ### Infrastructure Features
-- ✅ **Rebuild Button** - Trigger dictionary updates on EC2
-  - Update check (prevents unnecessary rebuilds)
-  - Real-time progress indicator with elapsed timer
-  - Progress bar (estimated 5-minute completion)
-  - "Up to date" detection
+- ✅ **Dictionaries Dialog** - Comprehensive dictionary management
+  - Individual repository control (ido, epo, bilingual)
+  - Separate pull and build operations
+  - Real-time status updates and progress indicators
+  - GitHub integration with direct repository links
+  - Smart update detection (only rebuild what's changed)
 - ✅ **Version Display** - App version in footer
 - ✅ **Repository Versions** - Shows latest versions of dictionaries
   - apertium-ido

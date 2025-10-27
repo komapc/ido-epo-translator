@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- **Dictionaries Dialog**: Comprehensive dictionary management interface
+  - Individual repository control for ido, epo, and bilingual dictionaries
+  - Separate "Pull Updates" and "Build & Install" operations
+  - Real-time status updates and progress indicators
+  - GitHub integration with direct repository links
+  - Smart update detection (only show actions when needed)
+- **New API Endpoints**: 
+  - `POST /api/admin/pull-repo` for git pull operations
+  - `POST /api/admin/build-repo` for compilation and installation
+- **Enhanced Version API**: Extended `/api/versions` with build status and update indicators
+- **New Shell Scripts**: `pull-repo.sh` and `build-repo.sh` for granular operations
+
+### Changed
+- **Replaced Rebuild Button**: Simple rebuild button replaced with comprehensive dictionaries dialog
+- **Enhanced Webhook Server**: Added support for individual repository operations
+- **Improved User Experience**: Better visibility into dictionary status and update process
+- **Updated Documentation**: Comprehensive documentation for new dictionary management system
+
+### Removed
+- **URL Translation Feature**: Removed webpage translation functionality
+  - Deleted `UrlTranslator.tsx` component
+  - Removed `/api/translate-url` endpoint
+  - Removed URL translation helper functions
+- **Old Rebuild Button**: Replaced `RebuildButton.tsx` with `DictionariesDialog.tsx`
 ### Fixed
 - Fixed Dockerfile deployment failure by removing non-existent apt packages (apertium-ido, apertium-ido-epo)
 - Updated Dockerfile to clone from komapc/apertium-ido instead of non-existent apertium/apertium-ido

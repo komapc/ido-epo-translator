@@ -267,6 +267,16 @@ systemctl reload apy
 ## 💡 Additional Improvements (Lower Priority)
 
 ### UI Enhancements:
+- ✅ **Dictionaries Dialog** - COMPLETED (October 27, 2025)
+  - Individual repository management (ido, epo, bilingual)
+  - Separate pull and build operations
+  - Real-time status updates and progress indicators
+  - GitHub integration with direct repository links
+  - Smart update detection
+- ✅ **Remove URL Translation** - COMPLETED (October 27, 2025)
+  - Removed UrlTranslator component
+  - Removed /api/translate-url endpoint
+  - Simplified UI to focus on text translation
 - [ ] **Add Google Analytics**
   - Implement Google Analytics 4 (GA4) tracking
   - Track translation usage patterns (language pairs, volume)
