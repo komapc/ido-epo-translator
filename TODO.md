@@ -41,7 +41,39 @@
 
 ---
 
-### 1. Improve Deployment (After Extractor Fixes)
+### 1. Automate EC2 Deployment
+**Status:** ⏳ **TODO**  
+**Priority:** Medium  
+**Time:** 2-3 hours  
+**Impact:** Automatic server-side updates
+
+**Current State:**
+- ✅ Frontend deploys automatically via GitHub Action
+- ❌ EC2 server-side code requires manual deployment
+
+**Goal:** Add GitHub Action to automatically deploy server-side changes to EC2
+
+**Tasks:**
+- [ ] Create `.github/workflows/deploy-ec2.yml`
+- [ ] Add EC2 SSH key to GitHub Secrets
+- [ ] Test automatic deployment of:
+  - `webhook-server-no-docker.js`
+  - `apy-server/*.sh` scripts
+- [ ] Add deployment notifications
+- [ ] Document the workflow
+
+**Benefits:**
+- Automatic EC2 updates when server code changes
+- Consistent deployment process
+- No manual SSH needed
+
+**Files to create:**
+- `.github/workflows/deploy-ec2.yml`
+- Update `DEPLOYMENT_GUIDE.md`
+
+---
+
+### 2. Improve Deployment (After Extractor Fixes)
 **Status:** Waiting for extractor fixes  
 **Priority:** High (after dictionary quality is resolved)  
 **Dependencies:** Extractor morphological integration and data cleaning
