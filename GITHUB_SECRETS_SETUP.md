@@ -48,7 +48,7 @@ gh workflow run deploy-worker.yml
 ```
 
 #### Option B: Push a Small Change (Automatic)
-The workflow will automatically run on the next push to `main` that affects `vortaro/**`
+The workflow will automatically run on the next push to `main` that affects `projects/translator/**`
 
 Or just wait - it will deploy automatically on the next merge to main.
 

@@ -143,7 +143,7 @@ ADMIN_PASSWORD = your-secure-password-here
 
 1. Click "Save and Deploy"
 2. Wait 2-3 minutes for build
-3. You'll get a URL like: `https://vortaro.pages.dev`
+3. You'll get a URL like: `https://ido-epo-translator.pages.dev`
 
 ### Step 5: Configure Functions
 

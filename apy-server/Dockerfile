@@ -34,26 +34,29 @@ RUN curl -sS https://apertium.projectjj.com/apt/install-nightly.sh | bash && \
       apertium-epo \
       && rm -rf /var/lib/apt/lists/*
 
-# Clone and build custom dictionaries from GitHub
+# Build ido dictionary from source (not in apt)
 WORKDIR /opt/apertium
 RUN git clone https://github.com/komapc/apertium-ido.git && \
     cd apertium-ido && \
     ./autogen.sh && ./configure && make && make install && \
-    cd .. && \
-    git clone https://github.com/apertium/apertium-epo.git && \
-    cd apertium-epo && \
-    ./autogen.sh && ./configure && make && make install && \
-    cd .. && \
-    git clone https://github.com/komapc/apertium-ido-epo.git && \
+    ldconfig
+
+# Build ido-epo bilingual dictionary from source (not in apt)
+# Note: This requires ido to be installed first
+RUN git clone https://github.com/komapc/apertium-ido-epo.git && \
     cd apertium-ido-epo && \
-    ./autogen.sh && ./configure && make && make install
+    ./autogen.sh && ./configure && make && make install && \
+    ldconfig
+
+# Clone epo repo for rebuild functionality (already installed via apt)
+RUN cd /opt/apertium && git clone https://github.com/apertium/apertium-epo.git
 
 # Copy rebuild scripts
 COPY rebuild.sh /opt/apertium/rebuild.sh
 COPY rebuild-self-updating.sh /opt/apertium/rebuild-self-updating.sh
 COPY pull-repo.sh /opt/apertium/pull-repo.sh
 COPY build-repo.sh /opt/apertium/build-repo.sh
-RUN chmod +x /opt/apertium/rebuild.sh /opt/apertium/rebuild-self-updating.sh /opt/apertium/pull-repo.sh /opt/apertium/build-repo.sh
+RUN chmod +x /opt/apertium/*.sh
 
 # Install APy (Apertium APy server)
 WORKDIR /opt
@@ -64,7 +67,7 @@ RUN git clone https://github.com/apertium/apertium-apy.git && \
 # Expose APy port
 EXPOSE 2737
 
-# Startup script
+# Startup script - use /usr/local/share for custom built dictionaries
 RUN echo '#!/bin/bash\n\
 set -e\n\
 cd /opt/apertium-apy\n\
@@ -73,4 +76,3 @@ python3 apy.py -p 2737 -j1 /usr/local/share/apertium/modes/\n\
 
 WORKDIR /opt/apertium-apy
 CMD ["/start.sh"]
-
