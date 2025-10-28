@@ -42,6 +42,34 @@ export default {
         return sendJson(200, { status: 'ok', version: VERSION, timestamp: new Date().toISOString() })
       }
 
+      if (request.method === 'GET' && subpath === '/status') {
+        try {
+          if (!env.REBUILD_WEBHOOK_URL) {
+            return sendJson(500, { error: 'Webhook URL not configured' })
+          }
+
+          const statusUrl = env.REBUILD_WEBHOOK_URL.replace('/rebuild', '/status')
+          const statusRes = await fetch(statusUrl, {
+            headers: {
+              'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '',
+            },
+            signal: AbortSignal.timeout(5000) // 5 second timeout
+          })
+
+          if (!statusRes.ok) {
+            return sendJson(502, {
+              error: 'Failed to fetch EC2 status',
+              details: `Status endpoint returned ${statusRes.status}`
+            })
+          }
+
+          const data = await statusRes.json()
+          return sendJson(200, data)
+        } catch (e) {
+          return sendJson(500, { error: 'Status check failed', details: e?.message })
+        }
+      }
+
       if (request.method === 'GET' && subpath === '/versions') {
         try {
           const repos = [
@@ -54,6 +82,27 @@ export default {
             'Accept': 'application/vnd.github+json',
             ...(env.GITHUB_TOKEN && { 'Authorization': `token ${env.GITHUB_TOKEN}` })
           }
+
+          // Fetch EC2 status in parallel with GitHub data
+          let ec2Status = null
+          try {
+            if (env.REBUILD_WEBHOOK_URL) {
+              const statusUrl = env.REBUILD_WEBHOOK_URL.replace('/rebuild', '/status')
+              const statusRes = await fetch(statusUrl, {
+                headers: {
+                  'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '',
+                },
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+              })
+              if (statusRes.ok) {
+                ec2Status = await statusRes.json()
+              }
+            }
+          } catch (e) {
+            // EC2 status fetch failed, continue without it
+            console.error('Failed to fetch EC2 status:', e.message)
+          }
+
           const results = await Promise.all(repos.map(async ({ owner, repo, label }) => {
             const base = `https://api.github.com/repos/${owner}/${repo}`
             // Try latest release first
@@ -93,6 +142,24 @@ export default {
               } catch { }
             }
 
+            // Get EC2 deployed status for this repo
+            let currentHash = null
+            let commitDate = null
+            let commitMessage = null
+            if (ec2Status?.repositories) {
+              const ec2Repo = ec2Status.repositories.find(r => r.repo === label)
+              if (ec2Repo) {
+                currentHash = ec2Repo.currentHash
+                commitDate = ec2Repo.commitDate
+                commitMessage = ec2Repo.commitMessage
+              }
+            }
+
+            // Determine if pull/build is needed
+            const needsPull = latestHash && currentHash && latestHash !== currentHash
+            const needsBuild = needsPull // If pulled, needs rebuild
+            const isUpToDate = latestHash && currentHash && latestHash === currentHash
+
             return {
               label,
               owner,
@@ -101,12 +168,13 @@ export default {
               buildDate,
               lastCommitDate,
               latestHash,
-              // These would be populated by the server with actual deployed state
-              currentHash: null,
-              lastBuiltHash: null,
-              needsPull: false,
-              needsBuild: false,
-              isUpToDate: true,
+              currentHash,
+              commitDate,
+              commitMessage,
+              lastBuiltHash: currentHash, // Same as current for now
+              needsPull,
+              needsBuild,
+              isUpToDate,
               githubUrl: `https://github.com/${owner}/${repo}`
             }
           }))

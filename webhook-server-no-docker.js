@@ -355,8 +355,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 // Start server
-server.listen(PORT, '127.0.0.1', () => {
-    log(`Webhook server listening on http://127.0.0.1:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    log(`Webhook server listening on http://0.0.0.0:${PORT}`);
     log(`Shared secret ${SHARED_SECRET ? 'enabled' : 'disabled'}`);
 });
 
