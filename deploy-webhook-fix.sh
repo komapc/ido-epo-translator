@@ -3,6 +3,9 @@
 
 set -e
 
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 EC2_HOST="ec2-52-211-137-158.eu-west-1.compute.amazonaws.com"
 EC2_USER="ubuntu"
 SSH_KEY="$HOME/.ssh/apertium.pem"
@@ -11,7 +14,7 @@ echo "🚀 Deploying webhook server fix to EC2..."
 
 # Copy updated webhook server
 echo "📤 Copying webhook-server-no-docker.js..."
-scp -i "$SSH_KEY" webhook-server-no-docker.js "$EC2_USER@$EC2_HOST:/tmp/webhook-server-no-docker.js"
+scp -i "$SSH_KEY" "$SCRIPT_DIR/webhook-server-no-docker.js" "$EC2_USER@$EC2_HOST:/tmp/webhook-server-no-docker.js"
 
 # Deploy and restart
 echo "🔄 Deploying and restarting webhook server..."
