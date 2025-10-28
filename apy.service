@@ -1,0 +1,14 @@
+[Unit]
+Description=Apertium APy HTTP Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/apertium
+ExecStart=/usr/bin/python3 -m apertium_apy.apy --port 2737 /usr/local/share/apertium/modes
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
