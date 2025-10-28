@@ -1,0 +1,188 @@
+=== FULL DIAGNOSTIC ===
+
+1. Webhook Server Status
+========================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+● webhook-server.service - Apertium Rebuild Webhook Server
+     Loaded: loaded (/etc/systemd/system/webhook-server.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/webhook-server.service.d
+             └─override.conf
+     Active: active (running) since Tue 2025-10-28 10:26:05 UTC; 9min ago
+   Main PID: 1152328 (node)
+      Tasks: 7 (limit: 1008)
+     Memory: 10.3M (peak: 11.3M)
+        CPU: 84ms
+     CGroup: /system.slice/webhook-server.service
+             └─1152328 /usr/bin/node /opt/webhook-server.js
+
+Oct 28 10:26:05 ip-172-31-45-145 systemd[1]: Started webhook-server.service - Apertium Rebuild Webhook Server.
+Oct 28 10:26:05 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:05.819Z] Webhook server listening on http://0.0.0.1:8081
+Oct 28 10:26:05 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:05.823Z] Shared secret enabled
+Oct 28 10:26:14 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:14.977Z] Received POST /pull-repo from 127.0.0.1
+Oct 28 10:26:14 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:14.977Z] Request rejected: invalid token
+
+2. Last 30 Lines of Webhook Logs
+=================================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:     at Server.setupListenHandle [as _listen2] (node:net:1800:21)
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:     at listenInCluster (node:net:1865:12)
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:     at doListen (node:net:2014:7)
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:     at process.processTicksAndRejections (node:internal/process/task_queues:83:21)
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]: Emitted 'error' event on Server instance at:
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:     at emitErrorNT (node:net:1844:8)
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:     at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:   code: 'EADDRNOTAVAIL',
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:   errno: -99,
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:   syscall: 'listen',
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:   address: '0.0.0.1',
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]:   port: 8081
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]: }
+Oct 28 10:25:52 ip-172-31-45-145 node[1152024]: Node.js v18.20.8
+Oct 28 10:25:52 ip-172-31-45-145 systemd[1]: webhook-server.service: Main process exited, code=exited, status=1/FAILURE
+Oct 28 10:25:52 ip-172-31-45-145 systemd[1]: webhook-server.service: Failed with result 'exit-code'.
+Oct 28 10:26:02 ip-172-31-45-145 systemd[1]: webhook-server.service: Scheduled restart job, restart counter is at 624.
+Oct 28 10:26:02 ip-172-31-45-145 systemd[1]: Started webhook-server.service - Apertium Rebuild Webhook Server.
+Oct 28 10:26:02 ip-172-31-45-145 node[1152319]: [2025-10-28T10:26:02.803Z] Webhook server listening on http://0.0.0.1:8081
+Oct 28 10:26:02 ip-172-31-45-145 node[1152319]: [2025-10-28T10:26:02.808Z] Shared secret enabled
+Oct 28 10:26:05 ip-172-31-45-145 node[1152319]: [2025-10-28T10:26:05.752Z] Received SIGTERM, shutting down gracefully
+Oct 28 10:26:05 ip-172-31-45-145 systemd[1]: Stopping webhook-server.service - Apertium Rebuild Webhook Server...
+Oct 28 10:26:05 ip-172-31-45-145 node[1152319]: [2025-10-28T10:26:05.753Z] Server closed
+Oct 28 10:26:05 ip-172-31-45-145 systemd[1]: webhook-server.service: Deactivated successfully.
+Oct 28 10:26:05 ip-172-31-45-145 systemd[1]: Stopped webhook-server.service - Apertium Rebuild Webhook Server.
+Oct 28 10:26:05 ip-172-31-45-145 systemd[1]: Started webhook-server.service - Apertium Rebuild Webhook Server.
+Oct 28 10:26:05 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:05.819Z] Webhook server listening on http://0.0.0.1:8081
+Oct 28 10:26:05 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:05.823Z] Shared secret enabled
+Oct 28 10:26:14 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:14.977Z] Received POST /pull-repo from 127.0.0.1
+Oct 28 10:26:14 ip-172-31-45-145 node[1152328]: [2025-10-28T10:26:14.977Z] Request rejected: invalid token
+
+3. Webhook Server File Content (last 20 lines)
+===============================================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+    log(`Webhook server listening on http://0.0.0.1:${PORT}`);
+    log(`Shared secret ${SHARED_SECRET ? 'enabled' : 'disabled'}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    log('Received SIGTERM, shutting down gracefully');
+    server.close(() => {
+        log('Server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    log('Received SIGINT, shutting down gracefully');
+    server.close(() => {
+        log('Server closed');
+        process.exit(0);
+    });
+});
+
+4. Check Listening Ports
+========================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+LISTEN 0      511          0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=273963,fd=5),("nginx",pid=273962,fd=5),("nginx",pid=273961,fd=5))
+LISTEN 0      128          0.0.0.0:2737       0.0.0.0:*    users:(("python3",pid=1143347,fd=3))                                                 
+LISTEN 0      511          0.0.0.0:8081       0.0.0.0:*    users:(("node",pid=1152328,fd=18))                                                   
+LISTEN 0      511             [::]:80            [::]:*    users:(("nginx",pid=273963,fd=6),("nginx",pid=273962,fd=6),("nginx",pid=273961,fd=6))
+LISTEN 0      128             [::]:2737          [::]:*    users:(("python3",pid=1143347,fd=4))                                                 
+
+5. Test Webhook Locally (from EC2)
+===================================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host localhost:8081 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8081...
+* connect to ::1 port 8081 from ::1 port 59134 failed: Connection refused
+*   Trying 127.0.0.1:8081...
+* Connected to localhost (127.0.0.1) port 8081
+> POST /pull-repo HTTP/1.1
+> Host: localhost:8081
+> User-Agent: curl/8.5.0
+> Accept: */*
+> Content-Type: application/json
+> X-Rebuild-Token: $(cat ~/.webhook-secret)
+> Content-Length: 15
+> 
+} [15 bytes data]
+< HTTP/1.1 401 Unauthorized
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Methods: POST, OPTIONS
+< Access-Control-Allow-Headers: Content-Type, X-Rebuild-Token
+< Content-Type: application/json
+< Date: Tue, 28 Oct 2025 10:35:45 GMT
+< Connection: keep-alive
+< Keep-Alive: timeout=5
+< Transfer-Encoding: chunked
+< 
+{ [24 bytes data]
+100    39    0    24  100    15   9844   6152 --:--:-- --:--:-- --:--:-- 19500
+* Connection #0 to host localhost left intact
+{"error":"Unauthorized"}
+6. Test Webhook from Outside
+=============================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+Using secret: 3e783bc7...8ccd002e
+Testing: http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:8081/pull-repo
+Note: Unnecessary use of -X or --request, POST is already inferred.
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:8081 was resolved.
+* IPv6: (none)
+* IPv4: 52.211.137.158
+*   Trying 52.211.137.158:8081...
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:08 --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0* Connection timed out after 10001 milliseconds
+  0     0    0     0    0     0      0      0 --:--:--  0:00:10 --:--:--     0
+* Closing connection
+curl: (28) Connection timed out after 10001 milliseconds
+
+7. Check Security Group (via AWS CLI)
+======================================
+Warning: Permanently added '52.211.137.158' (ED25519) to the list of known hosts.
+bash: line 1: ec2-metadata: command not found
+Instance ID: 
+
+Security Group: None
+
+An error occurred (InvalidGroupId.Malformed) when calling the DescribeSecurityGroups operation: Invalid id: "None" (expecting "sg-...")
+
+8. Cloudflare Worker Secrets
+=============================
+[
+  {
+    "name": "ADMIN_PASSWORD",
+    "type": "secret_text"
+  },
+  {
+    "name": "APP_VERSION",
+    "type": "secret_text"
+  },
+  {
+    "name": "APY_SERVER_URL",
+    "type": "secret_text"
+  },
+  {
+    "name": "GITHUB_TOKEN",
+    "type": "secret_text"
+  },
+  {
+    "name": "REBUILD_SHARED_SECRET",
+    "type": "secret_text"
+  },
+  {
+    "name": "REBUILD_WEBHOOK_URL",
+    "type": "secret_text"
+  }
+]
+
+9. Test Port Connectivity
+=========================
+Testing port 8081...
+❌ Port 8081 is CLOSED
+
+=== DIAGNOSTIC COMPLETE ===

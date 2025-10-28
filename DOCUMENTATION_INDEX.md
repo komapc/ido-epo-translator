@@ -91,7 +91,7 @@ Documenting specific features or changes:
 ## Project URLs
 
 - **Production:** https://ido-epo-translator.pages.dev
-- **GitHub Repo:** https://github.com/komapc/vortaro
+- **GitHub Repo:** https://github.com/komapc/ido-epo-translator
 - **EC2 APy Server:** http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com
 
 ---

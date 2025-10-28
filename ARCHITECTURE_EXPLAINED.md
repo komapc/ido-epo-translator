@@ -5,7 +5,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                       YOUR GITHUB REPO                       │
-│    github.com/komapc/vortaro                 │
+│    github.com/komapc/ido-epo-translator                 │
 │                                                              │
 │  ├── src/                    ← React frontend code          │
 │  ├── functions/api/          ← Cloudflare Functions         │
@@ -46,7 +46,7 @@
 ### **Location:**
 - **Global Edge Network** (200+ data centers worldwide)
 - Automatically cached at the closest location to your users
-- URL: `https://vortaro.pages.dev` (or custom domain)
+- URL: `https://ido-epo-translator.pages.dev` (or custom domain)
 
 ### **Files Served:**
 ```
@@ -416,7 +416,7 @@ ADMIN_PASSWORD=your-secure-password
 | **React App** | Cloudflare | `https://your-site.pages.dev` | Public |
 | **API Functions** | Cloudflare | `https://your-site.pages.dev/api/*` | Public |
 | **Translation Engine** | EC2 | `http://YOUR_EC2_IP:2737` | Public |
-| **Source Code** | GitHub | `github.com/komapc/vortaro` | Public |
+| **Source Code** | GitHub | `github.com/komapc/ido-epo-translator` | Public |
 | **Admin Panel** | Cloudflare | `https://your-site.pages.dev` (Admin tab) | Password |
 | **SSH Access** | EC2 | `ssh ubuntu@YOUR_EC2_IP` | SSH Key |
 

@@ -6,7 +6,7 @@
 
 ### Deploy Worker (manual)
 ```bash
-cd vortaro
+cd ido-epo-translator
 npm run build
 npm run cf:deploy
 ```
@@ -15,7 +15,7 @@ Required variables (Dashboard → Worker → Settings → Variables):
 - `APY_SERVER_URL = http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com`
 - `REBUILD_WEBHOOK_URL = http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/rebuild`
 
-CI deploy: merge to `main` under `vortaro/**` → GitHub Action `deploy-worker.yml` runs `wrangler deploy`.
+CI deploy: merge to `main` under `projects/translator/**` → GitHub Action `deploy-worker.yml` runs `wrangler deploy`.
 The build injects `VITE_APP_VERSION` from `package.json`; the Worker can also expose `APP_VERSION` via `/api/health`.
 
 ### Update dictionaries / APy on EC2
