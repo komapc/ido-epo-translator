@@ -283,6 +283,7 @@ systemctl reload apy
 - [ ] Staging environment
 - [ ] Automated smoke tests
 - [ ] Version tracking in UI
+- [ ] Rename to Tradukilo
 
 ---
 

@@ -171,8 +171,8 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // Only accept POST requests
-    if (req.method !== 'POST') {
+    // Accept POST for most endpoints, GET for /status
+    if (req.method !== 'POST' && !(req.method === 'GET' && req.url === '/status')) {
         res.writeHead(405, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Method not allowed' }));
         return;
@@ -280,6 +280,71 @@ const server = http.createServer(async (req, res) => {
                     message: 'Build failed',
                     error: err.error || 'Unknown error',
                     log: (err.stderr || err.stdout || '').split('\n').slice(-10).join('\n')
+                }));
+            }
+        } else if (req.url === '/status') {
+            // Get current status of all repositories
+            try {
+                const repos = ['ido', 'epo', 'bilingual'];
+                const repoMap = {
+                    'ido': '/opt/apertium/apertium-ido',
+                    'epo': '/opt/apertium/apertium-epo',
+                    'bilingual': '/opt/apertium/apertium-ido-epo'
+                };
+
+                const getRepoStatus = (repo) => {
+                    return new Promise((resolve) => {
+                        const repoDir = repoMap[repo];
+                        // Get hash, date, and commit message
+                        const git = spawn('git', ['-C', repoDir, 'log', '-1', '--format=%H|%cI|%s']);
+                        let output = '';
+
+                        git.stdout.on('data', (data) => {
+                            output += data.toString().trim();
+                        });
+
+                        git.on('close', (code) => {
+                            if (code === 0 && output) {
+                                const [hash, date, message] = output.split('|');
+                                resolve({
+                                    repo,
+                                    currentHash: hash,
+                                    commitDate: date,
+                                    commitMessage: message
+                                });
+                            } else {
+                                resolve({
+                                    repo,
+                                    currentHash: null,
+                                    commitDate: null,
+                                    commitMessage: null
+                                });
+                            }
+                        });
+
+                        git.on('error', () => {
+                            resolve({
+                                repo,
+                                currentHash: null,
+                                commitDate: null,
+                                commitMessage: null
+                            });
+                        });
+                    });
+                };
+
+                const statuses = await Promise.all(repos.map(getRepoStatus));
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'ok',
+                    repositories: statuses
+                }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'error',
+                    error: err.message || 'Unknown error'
                 }));
             }
         } else {
