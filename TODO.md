@@ -37,7 +37,7 @@
 
 **Files to monitor:**
 - `projects/extractor/TODO.md` - Critical fixes in progress
-- `EXTRACTOR_MORPHOLOGY_ANALYSIS.md` - Detailed issue analysis
+- `projects/docs/archive/EXTRACTOR_MORPHOLOGY_ANALYSIS.md` - Detailed issue analysis
 
 ---
 
