@@ -8,8 +8,13 @@ directory = "dist"
 binding = "ASSETS"
 run_worker_first = true
 
-# Set production variables in the Dashboard (APY_SERVER_URL, ADMIN_PASSWORD, REBUILD_WEBHOOK_URL, REBUILD_SHARED_SECRET).
-# Optional at runtime: APP_VERSION to surface version in /api/health
+# Production variables (non-secret)
+[vars]
+APY_SERVER_URL = "http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com"
+REBUILD_WEBHOOK_URL = "http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/rebuild"
+
+# SECURITY: REBUILD_SHARED_SECRET must be set as a Cloudflare Worker secret, NOT in wrangler.toml
+# Set it using: echo "SECRET_VALUE" | npx wrangler secret put REBUILD_SHARED_SECRET
 
 # Note: To deploy to production (default environment), use: wrangler deploy --env=""
 # or just: wrangler deploy (will use default top-level config)
