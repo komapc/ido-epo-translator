@@ -49,21 +49,20 @@ RUN apt-get update && apt-get install -y lsb-release curl && \
     rm -rf /var/lib/apt/lists/*
 ```
 
-### Nginx reverse proxy
-`/etc/nginx/sites-available/apy.conf`:
-```nginx
-server {
-  listen 80 default_server;
-  listen [::]:80 default_server;
-  server_name _;
-  location = /rebuild { proxy_pass http://127.0.0.1:9100/rebuild; }
-  location / { proxy_pass http://127.0.0.1:2737; }
-}
-```
-Reload:
+### Nginx Configuration
+
+**Managed in version control:** See [infra/nginx/](infra/nginx/) directory.
+
+**Quick deploy:**
 ```bash
-sudo nginx -t && sudo systemctl restart nginx
+cd infra/nginx
+./deploy-nginx-config.sh
 ```
+
+**Configuration details:**
+- Translation API: `/` → APy server (port 2737)
+- Webhook endpoints: `/status`, `/rebuild`, `/pull-repo`, `/build-repo` → webhook server (port 8081)
+- Full documentation: [infra/nginx/README.md](infra/nginx/README.md)
 
 ### Health checks
 ```bash
