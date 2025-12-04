@@ -292,12 +292,28 @@ export default {
             body: JSON.stringify({ repo, trigger: 'web-ui' }),
           })
           const text = await webhookRes.text().catch(() => '')
+
+          // Try to extract structured error information from the webhook response
+          let parsedError = null
+          try {
+            parsedError = JSON.parse(text)
+          } catch { }
+
           if (!webhookRes.ok) {
+            const bodySnippet = text?.slice(0, 2000) || ''
+            const diskSpaceHint = bodySnippet.includes('No space left on device')
+              ? 'Server may be out of disk space. Check EC2 disk usage (df -h) and /var/log/apertium-rebuild.log.'
+              : undefined
+
             return sendJson(502, {
               error: 'Failed to trigger repository build',
-              details: `Webhook returned ${webhookRes.status}`,
+              details: `Webhook returned ${webhookRes.status} for repo "${repo}"`,
               webhookUrl: env.REBUILD_WEBHOOK_URL,
-              body: text?.slice(0, 2000),
+              webhookStatus: webhookRes.status,
+              webhookBody: bodySnippet,
+              ...(parsedError?.error && { webhookError: parsedError.error }),
+              ...(parsedError?.log && { webhookLogTail: String(parsedError.log).slice(-1000) }),
+              ...(diskSpaceHint && { hint: diskSpaceHint }),
             })
           }
           // Try parse JSON, else wrap as text
