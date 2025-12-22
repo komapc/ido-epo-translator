@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, ExternalLink, GitPullRequest, Hammer, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
 
 interface RepoInfo {
@@ -35,6 +35,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
     const [repos, setRepos] = useState<RepoInfo[]>([])
     const [loading, setLoading] = useState(false)
     const [repoStatuses, setRepoStatuses] = useState<Record<string, RepoStatus>>({})
+    const dialogRef = useRef<HTMLDivElement>(null)
 
     const fetchRepos = async () => {
         setLoading(true)
@@ -74,6 +75,29 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
             fetchRepos()
         }
     }, [isOpen])
+
+    // Focus the dialog when it opens to enable keyboard events
+    useEffect(() => {
+        if (isOpen && dialogRef.current) {
+            dialogRef.current.focus()
+        }
+    }, [isOpen])
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose()
+            }
+        }
+
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown)
+        }
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [isOpen, onClose])
 
     const handlePull = async (repoLabel: string) => {
         setRepoStatuses(prev => ({
@@ -203,7 +227,11 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div 
+                ref={dialogRef}
+                tabIndex={-1}
+                className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-700">
                     <h2 className="text-xl font-semibold text-white">Dictionary Repositories</h2>
