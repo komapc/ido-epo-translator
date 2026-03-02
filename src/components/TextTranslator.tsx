@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, Copy, CheckCircle } from 'lucide-react'
+import { Loader2, Copy, CheckCircle, Shuffle } from 'lucide-react'
 
 interface TextTranslatorProps {
   direction: 'ido-epo' | 'epo-ido'
@@ -9,6 +9,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const [inputText, setInputText] = useState('')
   const [outputText, setOutputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingArticle, setIsLoadingArticle] = useState(false)
   const [copied, setCopied] = useState(false)
   const [useColorMode, setUseColorMode] = useState(true)
 
@@ -63,6 +64,22 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     })
   }
 
+  const handleRandomArticle = async () => {
+    setIsLoadingArticle(true)
+    try {
+      const wiki = direction === 'ido-epo' ? 'io' : 'eo'
+      const res = await fetch(`https://${wiki}.wikipedia.org/api/rest_v1/page/random/summary`)
+      const data = await res.json()
+      const text = [data.title, data.extract].filter(Boolean).join('\n\n')
+      setInputText(text)
+      setOutputText('')
+    } catch (error) {
+      console.error('Wikipedia fetch error:', error)
+    } finally {
+      setIsLoadingArticle(false)
+    }
+  }
+
   const handleTranslate = async () => {
     if (!inputText.trim()) return
 
@@ -100,9 +117,24 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     <div className="grid md:grid-cols-2 gap-6">
       {/* Input Panel */}
       <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-xl">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          {direction === 'ido-epo' ? 'Ido' : 'Esperanto'} Input
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">
+            {direction === 'ido-epo' ? 'Ido' : 'Esperanto'} Input
+          </h2>
+          <button
+            onClick={handleRandomArticle}
+            disabled={isLoadingArticle}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-all"
+            title={`Load random ${direction === 'ido-epo' ? 'Ido' : 'Esperanto'} Wikipedia article`}
+          >
+            {isLoadingArticle ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Shuffle className="w-4 h-4" />
+            )}
+            Random article
+          </button>
+        </div>
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
