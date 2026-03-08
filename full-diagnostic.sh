@@ -61,7 +61,7 @@ done
 echo ""
 echo "8. Cloudflare Worker Secrets"
 echo "============================="
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 npx wrangler secret list
 
 echo ""

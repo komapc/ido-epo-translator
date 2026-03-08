@@ -53,7 +53,7 @@ REBUILD_WEBHOOK_URL = "http://localhost/rebuild"
 
 **How to set (via CLI):**
 ```bash
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 
 # Set each secret (you'll be prompted to enter the value)
 npx wrangler secret put REBUILD_WEBHOOK_URL
@@ -112,7 +112,7 @@ npx wrangler secret put ADMIN_PASSWORD
 ### Step 1: Set Secrets (One-time, Never Reset)
 
 ```bash
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 
 # Get EC2 secret
 EC2_IP="52.211.137.158"  # Replace with your IP

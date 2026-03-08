@@ -58,7 +58,7 @@ The following environment variables must be set in Cloudflare Dashboard:
 5. **Redeploy**
    - After adding variables, redeploy the worker:
    ```bash
-   cd ~/apertium-dev/projects/translator
+   cd ~/apertium-gemini/projects/translator
    npm run deploy
    ```
 
@@ -67,7 +67,7 @@ The following environment variables must be set in Cloudflare Dashboard:
 ### Option 2: Using Wrangler CLI
 
 ```bash
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 
 # Set REBUILD_WEBHOOK_URL
 wrangler secret put REBUILD_WEBHOOK_URL

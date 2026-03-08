@@ -57,7 +57,7 @@ echo ""
 echo "9. Cloudflare Worker Secrets"
 echo "============================="
 echo "Checking what secrets are set..."
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 npx wrangler secret list
 
 echo ""

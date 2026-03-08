@@ -7,7 +7,7 @@ Dictionaries are now generated from unified JSON sources using an automated pipe
 ## Quick Regeneration
 
 ```bash
-cd /home/mark/apertium-dev/projects/data
+cd /home/mark/apertium-gemini/projects/data
 python3 scripts/regenerate_all.py
 ```
 
@@ -56,7 +56,7 @@ Wikipedia/Wiktionary → Extractors → Unified JSON → Merge → Generate DIX 
 ### 1. Regenerate Dictionaries
 
 ```bash
-cd /home/mark/apertium-dev/projects/data
+cd /home/mark/apertium-gemini/projects/data
 python3 scripts/regenerate_all.py
 ```
 
@@ -77,7 +77,7 @@ xmllint --xpath '//pardefs' apertium-ido.ido.dix > /tmp/paradigms.xml
 
 ```bash
 # Backup current files
-cd /home/mark/apertium-dev/apertium
+cd /home/mark/apertium-gemini/apertium
 cp apertium-ido/apertium-ido.ido.dix apertium-ido/apertium-ido.ido.dix.backup
 cp apertium-ido-epo/apertium-ido-epo.ido-epo.dix apertium-ido-epo/apertium-ido-epo.ido-epo.dix.backup
 
@@ -99,7 +99,7 @@ make clean && make
 ### 5. Test
 
 ```bash
-cd /home/mark/apertium-dev/apertium/apertium-ido-epo
+cd /home/mark/apertium-gemini/apertium/apertium-ido-epo
 
 # Test basic translations
 echo "personi" | apertium -d . ido-epo
@@ -138,7 +138,7 @@ python3 scripts/regenerate_all.py --validate-xml
 ### Individual Generation
 
 ```bash
-cd /home/mark/apertium-dev/projects/data
+cd /home/mark/apertium-gemini/projects/data
 
 # Generate monodix only
 python3 scripts/generate_monodix.py \
@@ -159,7 +159,7 @@ python3 scripts/export_vortaro.py
 To re-extract from Wikipedia/Wiktionary:
 
 ```bash
-cd /home/mark/apertium-dev/projects/extractor
+cd /home/mark/apertium-gemini/projects/extractor
 make regenerate-fast  # ~1 hour
 ```
 
@@ -254,4 +254,5 @@ For issues or questions about the regeneration pipeline, see project documentati
 **Last Updated:** December 4, 2025  
 **Pipeline Version:** 1.0  
 **Status:** Production Ready
+
 

@@ -4,7 +4,7 @@
 echo "=== Fixing vortaro references ==="
 echo ""
 
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 
 # Find and replace in all files
 echo "Replacing github.com/komapc/ido-epo-translator → github.com/komapc/ido-epo-translator"
