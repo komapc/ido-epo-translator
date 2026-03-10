@@ -216,7 +216,7 @@ Since Docker can't be run in this environment, manual testing is needed:
 
 ### Local Development
 ```bash
-cd /home/mark/apertium-gemini/ido-epo-translator/apy-server/
+cd /home/mark/apertium-dev/ido-epo-translator/apy-server/
 docker-compose build
 docker-compose up -d
 

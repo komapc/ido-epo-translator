@@ -11,7 +11,7 @@
 
 ```bash
 # On your local machine:
-cd ~/apertium-gemini/projects/translator
+cd ~/apertium-dev/projects/translator
 
 # Copy migration script to EC2
 scp -i ~/.ssh/apertium.pem migrate-to-no-docker.sh ubuntu@ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:~
@@ -74,7 +74,7 @@ sudo netstat -tlnp | grep -E '(2737|8081)'
 ### Step 1: Copy Migration Script
 ```bash
 # From local machine
-cd ~/apertium-gemini/projects/translator
+cd ~/apertium-dev/projects/translator
 scp -i ~/.ssh/apertium.pem migrate-to-no-docker.sh ubuntu@<ec2-ip>:~
 ```
 

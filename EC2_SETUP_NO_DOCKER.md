@@ -368,7 +368,7 @@ sudo chmod +x /opt/apertium/*.sh
 
 4. Redeploy worker:
 ```bash
-cd ~/apertium-gemini/projects/translator
+cd ~/apertium-dev/projects/translator
 npm run deploy
 ```
 

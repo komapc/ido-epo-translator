@@ -10,7 +10,7 @@
 Before testing, ensure:
 - [ ] All code changes have been committed
 - [ ] Docker and Docker Compose are installed
-- [ ] You're in the correct directory: `/home/mark/apertium-gemini/ido-epo-translator/apy-server/`
+- [ ] You're in the correct directory: `/home/mark/apertium-dev/ido-epo-translator/apy-server/`
 - [ ] Any existing containers are stopped: `docker-compose down`
 
 ---
@@ -21,7 +21,7 @@ Before testing, ensure:
 
 ### Steps:
 ```bash
-cd /home/mark/apertium-gemini/ido-epo-translator/apy-server/
+cd /home/mark/apertium-dev/ido-epo-translator/apy-server/
 docker-compose build --no-cache
 ```
 
@@ -170,7 +170,7 @@ docker exec ido-epo-apy /opt/apertium/rebuild-self-updating.sh
 ### Steps:
 ```bash
 # Start the webhook server on host (simulates EC2 setup)
-cd /home/mark/apertium-gemini/ido-epo-translator
+cd /home/mark/apertium-dev/ido-epo-translator
 node webhook-server.js &
 
 # In another terminal, trigger rebuild via webhook
@@ -204,7 +204,7 @@ pkill -f webhook-server.js
 ### Steps:
 ```bash
 # Start the development server
-cd /home/mark/apertium-gemini/ido-epo-translator
+cd /home/mark/apertium-dev/ido-epo-translator
 npm run dev
 
 # In browser, open http://localhost:5173
