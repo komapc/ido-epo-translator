@@ -61,7 +61,7 @@ GitHub Repo → Settings → Secrets and variables → Actions → Repository se
 If you prefer to deploy manually instead of via GitHub Actions:
 
 ```bash
-cd /home/mark/apertium-dev/projects/translator
+cd /home/mark/apertium-gemini/projects/translator
 
 # Set your Cloudflare credentials locally
 export CLOUDFLARE_API_TOKEN="your-token-here"

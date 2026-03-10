@@ -5,7 +5,7 @@
 From your local machine, run:
 
 ```bash
-cd ~/apertium-dev/projects/translator
+cd ~/apertium-gemini/projects/translator
 ./deploy-to-ec2-remote.sh
 ```
 
