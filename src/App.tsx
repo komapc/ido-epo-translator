@@ -27,7 +27,7 @@ const App = () => {
       f3: 'Libera kodo e gratuita uzo',
       related: 'Relatanta projekti:',
       dictionary: 'Ido-Esperanto-Vortaro',
-      phonomorph: 'PhonoMorph (Fonetikala evoluciono)'
+      phonomorph: 'EchoDrift (Fonetikala evoluciono)'
     },
     en: {
       title: 'About the Translator',
@@ -38,7 +38,7 @@ const App = () => {
       f3: 'Open source and free to use',
       related: 'Related projects:',
       dictionary: 'Ido-Esperanto Dictionary',
-      phonomorph: 'PhonoMorph (Phonetic Shifts)'
+      phonomorph: 'EchoDrift (Phonetic Shifts)'
     },
     eo: {
       title: 'Pri la Tradukilo',
@@ -49,7 +49,7 @@ const App = () => {
       f3: 'Malferma fontkodo kaj libera uzo',
       related: 'Rilataj projektoj:',
       dictionary: 'Ido-Esperanto Vortaro',
-      phonomorph: 'PhonoMorph (Fonetikaj Ŝanĝoj)'
+      phonomorph: 'EchoDrift (Fonetikaj Ŝanĝoj)'
     }
   }
 

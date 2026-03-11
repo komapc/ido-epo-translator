@@ -16,15 +16,15 @@ const Footer = ({ onAboutClick }: FooterProps) => {
           <a href="https://ido-epo-translator.komapc.workers.dev/" className="text-white hover:underline mx-1">Tradukilo</a> 
           (<a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:underline">kodo</a>)
           <span className="mx-2 opacity-30">·</span>
-          <a href="https://komapc.github.io/phonomorph" className="text-white hover:underline mx-1">PhonoMorph</a> 
-          (<a href="https://github.com/komapc/phonomorph" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:underline">kodo</a>)
+          <a href="https://komapc.github.io/a2a" className="text-white hover:underline mx-1">EchoDrift</a> 
+          (<a href="https://github.com/komapc/a2a" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:underline">kodo</a>)
         </div>
         
         <div>
           Rersursi: 
           <a href="https://github.com/apertium" target="_blank" rel="noopener noreferrer" className="text-white hover:underline mx-1">Apertium</a> (Apertium-based)
           <span className="mx-2 opacity-30">·</span>
-          <a href="https://io.wikipedia.org" target="_blank" rel="noopener noreferrer" className="text-white hover:underline mx-1">Ido Wikipedia</a>
+          Kontakto: <a href="mailto:komapc@gmail.com" className="text-white hover:underline mx-1">komapc@gmail.com</a>
           <span className="mx-2 opacity-30">·</span>
           <button 
             onClick={onAboutClick}
