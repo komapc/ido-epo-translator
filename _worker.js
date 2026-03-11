@@ -361,8 +361,45 @@ export default {
 
     // Static assets via ASSETS binding; fallback to index.html for SPA routing
     try {
-      const asset = await env.ASSETS.fetch(request)
-      return asset
+      // Check if we should inject dynamic meta tags for social sharing
+      const q = url.searchParams.get('q')
+      const dir = url.searchParams.get('dir') || 'ido-epo'
+      
+      let response = await env.ASSETS.fetch(request)
+      
+      if (response.status === 200 && (url.pathname === '/' || url.pathname === '/index.html') && q) {
+        let html = await response.text()
+        
+        // Simple translation preview logic (just for the meta tag)
+        const langFrom = dir === 'ido-epo' ? 'Ido' : 'Esperanto'
+        const langTo = dir === 'ido-epo' ? 'Esperanto' : 'Ido'
+        const title = `${q} - ${langFrom} to ${langTo} Translation`
+        const description = `Translate "${q}" from ${langFrom} to ${langTo} instantly with the Ido-Esperanto Translator.`
+        
+        // Inject tags before </head>
+        const metaTags = `
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="twitter:title" content="${title}">
+    <meta property="twitter:description" content="${description}">
+        `
+        // Replace existing generic title/desc if they exist, or just prepend
+        html = html.replace('<title>Ido-Esperanto Translator</title>', '')
+        html = html.replace('</head>', `${metaTags}\n  </head>`)
+        
+        return new Response(html, {
+          headers: response.headers
+        })
+      }
+      
+      if (!response.ok && !url.pathname.includes('.')) {
+        const indexRequest = new Request(new URL('/index.html', request.url), request)
+        return await env.ASSETS.fetch(indexRequest)
+      }
+      
+      return response
     } catch (_) {
       try {
         const indexRequest = new Request(new URL('/index.html', request.url), request)
