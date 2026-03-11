@@ -159,38 +159,21 @@ const App = () => {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto">
-          <TextTranslator direction={direction} />
-        </main>
+          import RepoVersions from './components/RepoVersions'
+          import Footer from './components/Footer'
 
-        {/* Dictionaries Dialog */}
-        <DictionariesDialog
-          isOpen={isDictionariesOpen}
-          onClose={() => setIsDictionariesOpen(false)}
-        />
+          type LanguageDirection = 'ido-epo' | 'epo-ido'
+          ...
+                  {/* Dictionaries Dialog */}
+                  <DictionariesDialog
+                    isOpen={isDictionariesOpen}
+                    onClose={() => setIsDictionariesOpen(false)}
+                  />
 
-        {/* Footer */}
-        <footer className="text-center mt-12 text-white/80 text-sm">
-          <p>
-            Open source translation using Apertium · v{import.meta.env.VITE_APP_VERSION || 'dev'} ·{' '}
-            <a
-              href="https://github.com/apertium"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-white"
-            >
-              Learn more
-            </a>
-          </p>
-          {/* Versions */}
-          <div className="flex justify-center">
-            <div className="max-w-4xl">
-              <RepoVersions />
-            </div>
-          </div>
-        </footer>
-      </div>
-    </div>
-  )
-}
-
+                  {/* Footer */}
+                  <Footer onAboutClick={() => setShowAbout(true)} />
+                </div>
+              </div>
+            )
+          }
 export default App
