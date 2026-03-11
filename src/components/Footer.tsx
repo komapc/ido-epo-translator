@@ -6,33 +6,39 @@ interface FooterProps {
 
 const Footer = ({ onAboutClick }: FooterProps) => {
   return (
-    <footer className="mt-12 pt-8 pb-8 border-t border-white/10 text-white/70 text-center text-sm leading-relaxed">
+    <footer className="mt-16 pt-10 pb-10 border-t border-white/10 text-white/70 text-center text-sm">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-2">
-          Mea projekti: 
-          <a href="https://komapc.github.io/vortaro" className="text-white hover:underline mx-1">Vortaro</a> 
-          (<a href="https://github.com/komapc/vortaro" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:underline">kodo</a>)
-          <span className="mx-2 opacity-30">·</span>
-          <a href="https://ido-epo-translator.komapc.workers.dev/" className="text-white hover:underline mx-1">Tradukilo</a> 
-          (<a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:underline">kodo</a>)
-          <span className="mx-2 opacity-30">·</span>
-          <a href="https://komapc.github.io/a2a" className="text-white hover:underline mx-1">EchoDrift</a> 
-          (<a href="https://github.com/komapc/a2a" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:underline">kodo</a>)
+        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-3">
+          <span className="opacity-80">Mea projekti:</span>
+          <a href="https://komapc.github.io/vortaro" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a> 
+          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/vortaro" target="_blank" rel="noopener noreferrer" className="hover:underline">kodo</a>)</span>
+          
+          <span className="opacity-30">·</span>
+          <a href="https://ido-epo-translator.komapc.workers.dev/" className="text-white font-semibold hover:text-white transition-colors underline decoration-white/30 underline-offset-4">Tradukilo</a> 
+          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="hover:underline">kodo</a>)</span>
+          
+          <span className="opacity-30">·</span>
+          <a href="https://komapc.github.io/a2a" className="text-white font-semibold hover:text-white transition-colors">EchoDrift</a> 
+          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/a2a" target="_blank" rel="noopener noreferrer" className="hover:underline">kodo</a>)</span>
         </div>
         
-        <div>
-          Rersursi: 
-          <a href="https://github.com/apertium" target="_blank" rel="noopener noreferrer" className="text-white hover:underline mx-1">Apertium</a> (Apertium-based)
-          <span className="mx-2 opacity-30">·</span>
-          Kontakto: <a href="mailto:komapc@gmail.com" className="text-white hover:underline mx-1">komapc@gmail.com</a>
-          <span className="mx-2 opacity-30">·</span>
+        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
+          <span className="opacity-80">Rersursi:</span>
+          <a href="https://github.com/apertium" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">Apertium</a>
+          <span className="text-xs opacity-50 -ml-3">(Apertium-based)</span>
+          
+          <span className="opacity-30">·</span>
+          <span>Kontakto: <a href="mailto:komapc@gmail.com" className="text-white font-semibold hover:text-white transition-colors">komapc@gmail.com</a></span>
+          
+          <span className="opacity-30">·</span>
           <button 
             onClick={onAboutClick}
-            className="text-white hover:underline mx-1 inline-flex items-center gap-1"
+            className="text-white font-semibold hover:text-white transition-colors flex items-center gap-1"
           >
-            <Info className="w-3 h-3" /> Pri ca projekto
+            <Info className="w-3.5 h-3.5" /> Pri la projekto
           </button>
-          <span className="ml-4 font-mono opacity-50 text-xs">v{import.meta.env.VITE_APP_VERSION || '1.0.0'}</span>
+          
+          <span className="bg-white/10 px-2 py-0.5 rounded font-mono text-[10px] opacity-60">v{import.meta.env.VITE_APP_VERSION || '1.0.0'}</span>
         </div>
       </div>
     </footer>
