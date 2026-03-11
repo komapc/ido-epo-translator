@@ -171,9 +171,8 @@ const App = () => {
                   />
 
                   {/* Footer */}
-                  <Footer onAboutClick={() => setShowAbout(true)} />
-                </div>
-              </div>
-            )
-          }
-export default App
+                  <Footer onAboutClick={() => setShowAbout(true)} lang={aboutLang} />
+                  </div>
+                  </div>
+                  )
+                  }export default App
