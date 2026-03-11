@@ -26,7 +26,8 @@ const App = () => {
       f2: 'Morfologiala analizuro de vorti',
       f3: 'Aperta kodo e libera uzo',
       related: 'Relatanta projekti:',
-      dictionary: 'Ido-Esperanto Vortaro'
+      dictionary: 'Ido-Esperanto Vortaro',
+      phonomorph: 'PhonoMorph (Fonetik-evoluciono)'
     },
     en: {
       title: 'About the Translator',
@@ -36,7 +37,8 @@ const App = () => {
       f2: 'Morphological analysis of words',
       f3: 'Open source and free to use',
       related: 'Related projects:',
-      dictionary: 'Ido-Esperanto Dictionary'
+      dictionary: 'Ido-Esperanto Dictionary',
+      phonomorph: 'PhonoMorph (Phonetic Shifts)'
     },
     eo: {
       title: 'Pri la Tradukilo',
@@ -46,7 +48,8 @@ const App = () => {
       f2: 'Morfologia analizo de vortoj',
       f3: 'Malferma fontkodo kaj libera uzo',
       related: 'Rilataj projektoj:',
-      dictionary: 'Ido-Esperanto Vortaro'
+      dictionary: 'Ido-Esperanto Vortaro',
+      phonomorph: 'PhonoMorph (Fonetikaj Ŝanĝoj)'
     }
   }
 
@@ -64,6 +67,13 @@ const App = () => {
             >
               <Book className="w-4 h-4" />
               Dictionary
+            </a>
+            <a 
+              href="https://phonomorph.app" 
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
+            >
+              <Globe className="w-4 h-4" />
+              PhonoMorph
             </a>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">
@@ -117,9 +127,14 @@ const App = () => {
               <li>{t.f3}</li>
             </ul>
             <p className="text-sm font-bold mb-2">{t.related}</p>
-            <a href="https://vortaro.app" className="text-blue-300 hover:text-blue-200 underline flex items-center gap-1">
-              <Book className="w-3 h-3" /> {t.dictionary}
-            </a>
+            <div className="flex flex-col gap-2">
+              <a href="https://vortaro.app" className="text-blue-300 hover:text-blue-200 underline flex items-center gap-1">
+                <Book className="w-3 h-3" /> {t.dictionary}
+              </a>
+              <a href="https://phonomorph.app" className="text-blue-300 hover:text-blue-200 underline flex items-center gap-1">
+                <Globe className="w-3 h-3" /> {t.phonomorph}
+              </a>
+            </div>
           </div>
         )}
 
