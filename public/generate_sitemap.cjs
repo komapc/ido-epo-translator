@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DOMAIN = 'https://translator.app';
+const DOMAIN = 'https://ido-epo-translator.komapc.workers.dev';
 const publicDir = __dirname;
 
 let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
