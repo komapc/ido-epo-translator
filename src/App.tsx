@@ -20,14 +20,14 @@ const App = () => {
   const aboutContent = {
     io: {
       title: 'Pri la Tradukilo',
-      desc: 'Ca tradukilo posibligas rapida e preciza tradukado inter Ido e Esperanto uzante la Apertium mashin-tradukado motoro.',
+      desc: 'Ca tradukilo posibligas rapida e preciza tradukado inter Ido e Esperanto per la Apertium-mashintradukado-motoro.',
       features: 'Traiti:',
       f1: 'Dudireciona tradukado (Ido ↔ Esperanto)',
-      f2: 'Morfologiala analizuro de vorti',
-      f3: 'Aperta kodo e libera uzo',
+      f2: 'Morfologiala analizo di vorti',
+      f3: 'Libera kodo e gratuita uzo',
       related: 'Relatanta projekti:',
-      dictionary: 'Ido-Esperanto Vortaro',
-      phonomorph: 'PhonoMorph (Fonetik-evoluciono)'
+      dictionary: 'Ido-Esperanto-Vortaro',
+      phonomorph: 'PhonoMorph (Fonetikala evoluciono)'
     },
     en: {
       title: 'About the Translator',
