@@ -45,7 +45,7 @@ const Footer = ({ onAboutClick, lang }: FooterProps) => {
           <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
           
           <span className="opacity-30">·</span>
-          <a href="https://komapc.github.io/a2a" className="text-white font-semibold hover:text-white transition-colors">EchoDrift</a> 
+          <a href="https://echodrift.pages.dev/" className="text-white font-semibold hover:text-white transition-colors">EchoDrift</a> 
           <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/a2a" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
         </div>
         
