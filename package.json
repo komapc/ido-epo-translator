@@ -6,14 +6,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "VITE_APP_VERSION=$npm_package_version tsc && vite build && npm run postbuild",
-    "build:pages": "VITE_APP_VERSION=$npm_package_version tsc && vite build --base=/ido-epo-translator/ && npm run postbuild",
+    "build": "VITE_APP_VERSION=$npm_package_version npx tsc && npx vite build && npm run postbuild",
+    "build:pages": "VITE_APP_VERSION=$npm_package_version npx tsc && npx vite build --base=/ido-epo-translator/ && npm run postbuild",
     "postbuild": "node public/generate_sitemap.cjs",
-    "preview": "vite preview",
-    "cf:dev": "wrangler dev --assets dist",
-    "cf:deploy": "wrangler deploy",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "deploy": "npm run build && wrangler deploy"
+    "preview": "npx vite preview",
+    "cf:dev": "npx wrangler dev --assets dist",
+    "cf:deploy": "npx wrangler deploy",
+    "lint": "npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "deploy": "npm run build && npx wrangler deploy"
   },
   "dependencies": {
     "react": "^18.2.0",
