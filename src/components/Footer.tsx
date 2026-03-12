@@ -37,7 +37,7 @@ const Footer = ({ onAboutClick, lang }: FooterProps) => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-3">
           <span className="opacity-80">{t.projects}:</span>
-          <a href="https://vortaro.komapc.workers.dev/" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a> 
+          <a href="https://vortaro-98d.pages.dev/" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a> 
           <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/vortaro" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
           
           <span className="opacity-30">·</span>
