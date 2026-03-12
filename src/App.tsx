@@ -3,6 +3,7 @@ import { ArrowLeftRight, Database, Book, Info, Globe } from 'lucide-react'
 import TextTranslator from './components/TextTranslator'
 import DictionariesDialog from './components/DictionariesDialog'
 import RepoVersions from './components/RepoVersions'
+import Footer from './components/Footer'
 
 type LanguageDirection = 'ido-epo' | 'epo-ido'
 type AboutLang = 'io' | 'en' | 'eo'
@@ -62,18 +63,18 @@ const App = () => {
         <header className="text-center mb-8 relative">
           <div className="absolute right-0 top-0 flex gap-2">
              <a 
-              href="https://vortaro.app" 
+              href="https://ido-vortaro.pages.dev" 
               className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
             >
               <Book className="w-4 h-4" />
               Dictionary
             </a>
             <a 
-              href="https://phonomorph.app" 
+              href="https://echodrift.pages.dev" 
               className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
             >
               <Globe className="w-4 h-4" />
-              PhonoMorph
+              EchoDrift
             </a>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">
@@ -126,15 +127,6 @@ const App = () => {
               <li>{t.f2}</li>
               <li>{t.f3}</li>
             </ul>
-            <p className="text-sm font-bold mb-2">{t.related}</p>
-            <div className="flex flex-col gap-2">
-              <a href="https://vortaro.app" className="text-blue-300 hover:text-blue-200 underline flex items-center gap-1">
-                <Book className="w-3 h-3" /> {t.dictionary}
-              </a>
-              <a href="https://phonomorph.app" className="text-blue-300 hover:text-blue-200 underline flex items-center gap-1">
-                <Globe className="w-3 h-3" /> {t.phonomorph}
-              </a>
-            </div>
           </div>
         )}
 
@@ -146,7 +138,7 @@ const App = () => {
             </span>
             <button
               onClick={handleSwapDirection}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all hover:scale-110"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
               aria-label="Swap translation direction"
             >
               <ArrowLeftRight className="w-5 h-5 text-white" />
@@ -159,20 +151,25 @@ const App = () => {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto">
-          import RepoVersions from './components/RepoVersions'
-          import Footer from './components/Footer'
+          <TextTranslator direction={direction} />
+        </main>
 
-          type LanguageDirection = 'ido-epo' | 'epo-ido'
-          ...
-                  {/* Dictionaries Dialog */}
-                  <DictionariesDialog
-                    isOpen={isDictionariesOpen}
-                    onClose={() => setIsDictionariesOpen(false)}
-                  />
+        {/* Dictionaries Dialog */}
+        <DictionariesDialog
+          isOpen={isDictionariesOpen}
+          onClose={() => setIsDictionariesOpen(false)}
+        />
 
-                  {/* Footer */}
-                  <Footer onAboutClick={() => setShowAbout(true)} lang={aboutLang} />
-                  </div>
-                  </div>
-                  )
-                  }export default App
+        {/* Footer */}
+        <Footer onAboutClick={() => setShowAbout(true)} lang={aboutLang} />
+        
+        {/* Repo Versions (Stats) */}
+        <div className="flex justify-center mt-8">
+          <RepoVersions />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default App

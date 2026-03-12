@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DOMAIN = 'https://ido-epo-translator.komapc.workers.dev';
+const DOMAIN = 'https://ido-tradukilo.pages.dev';
 const publicDir = __dirname;
 const DICTIONARY_PATH = path.join(__dirname, '../../vortaro/dictionary.json');
 
