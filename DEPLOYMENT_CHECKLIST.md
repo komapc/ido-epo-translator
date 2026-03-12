@@ -96,7 +96,7 @@ This project now deploys as a single Worker that serves static assets via the AS
   ```bash
   npm run build && npm run cf:deploy
   ```
-- [ ] Note your Workers.dev URL (e.g., `https://ido-epo-translator.komapc.workers.dev`)
+- [ ] Note your Workers.dev URL (e.g., `https://ido-tradukilo.pages.dev`)
 
 ### Optional: Custom domain or route
 - [ ] Dashboard → Workers & Pages → Your Worker → Triggers → Routes

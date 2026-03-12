@@ -298,7 +298,7 @@ Ido and Esperanto share ~20% identical vocabulary (both derive from Romance lang
 
 ## Vortaro: The Dictionary as a Byproduct
 
-All this dictionary work produced a useful standalone tool: **[Vortaro](https://komapc.github.io/vortaro/)** - an online Ido↔Esperanto dictionary.
+All this dictionary work produced a useful standalone tool: **[Vortaro](https://ido-vortaro.pages.dev/)** - an online Ido↔Esperanto dictionary.
 
 **Features:**
 - 🔍 Bidirectional search (Ido↔Esperanto)
@@ -308,7 +308,7 @@ All this dictionary work produced a useful standalone tool: **[Vortaro](https://
 - 📱 Mobile-optimized
 - ⚡ Works offline (pure static site, no backend)
 
-**Live:** https://komapc.github.io/vortaro/
+**Live:** https://ido-vortaro.pages.dev/
 
 ---
 
@@ -390,7 +390,7 @@ If you're working with a low-resource language pair, consider Apertium. The lear
 | Resource | URL |
 |----------|-----|
 | **Live Translator** | https://ido-epo-translator.pages.dev |
-| **Dictionary (Vortaro)** | https://komapc.github.io/vortaro/ |
+| **Dictionary (Vortaro)** | https://ido-vortaro.pages.dev/ |
 | **Apertium Pair (source)** | https://github.com/komapc/apertium-ido-epo |
 | **Extractor Pipeline** | https://github.com/komapc/ido-esperanto-extractor |
 | **BERT Aligner** | (in main repo under `projects/embedding-aligner/`) |

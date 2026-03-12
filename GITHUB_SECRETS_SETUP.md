@@ -57,7 +57,7 @@ Or just wait - it will deploy automatically on the next merge to main.
 After the workflow runs successfully:
 
 1. Check workflow status: https://github.com/komapc/apertium-ido-epo/actions
-2. Visit your deployed app: https://ido-epo-translator.komapc.workers.dev
+2. Visit your deployed app: https://ido-tradukilo.pages.dev
    (Or whatever your Workers URL is)
 
 ## Environment Variables in Cloudflare

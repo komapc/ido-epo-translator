@@ -42,8 +42,8 @@ OR simply push a new commit to trigger deployment.
 ### 3. Verify Deployment
 
 After successful deployment, check:
-- Worker is live at: `https://ido-epo-translator.komapc.workers.dev/` (or your custom domain)
-- Health check: `https://ido-epo-translator.komapc.workers.dev/api/health`
+- Worker is live at: `https://ido-tradukilo.pages.dev/` (or your custom domain)
+- Health check: `https://ido-tradukilo.pages.dev/api/health`
 
 ## Quick Reference
 

@@ -67,7 +67,7 @@ cd infra/nginx
 ### Health checks
 ```bash
 # Worker
-curl https://ido-epo-translator.komapc.workers.dev/api/health
+curl https://ido-tradukilo.pages.dev/api/health
 
 # APy via EC2 hostname
 curl http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/listPairs

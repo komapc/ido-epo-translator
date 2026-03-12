@@ -59,7 +59,7 @@ After configuring Cloudflare:
 
 1. **Open your translator web app:**
    ```
-   https://ido-epo-translator.komapc.workers.dev
+   https://ido-tradukilo.pages.dev
    ```
 
 2. **Click the "Rebuild" button**
