@@ -9,11 +9,10 @@ binding = "ASSETS"
 run_worker_first = true
 
 # Production variables (non-secret)
-# NOTE: Backend deployed to EC2 at 54.220.110.151:3737
-# If EC2 is not yet initialized, local backend can be used as fallback
+# Backend deployed to EC2 at 54.220.110.151:3737
 [vars]
-APY_SERVER_URL = "http://localhost:3737"
-REBUILD_WEBHOOK_URL = "http://localhost:3737"
+APY_SERVER_URL = "http://54.220.110.151:3737"
+REBUILD_WEBHOOK_URL = "http://54.220.110.151:3737"
 
 # SECURITY: REBUILD_SHARED_SECRET must be set as a Cloudflare Worker secret, NOT in wrangler.toml
 # Set it using: echo "SECRET_VALUE" | npx wrangler secret put REBUILD_SHARED_SECRET
