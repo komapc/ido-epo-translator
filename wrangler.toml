@@ -10,8 +10,8 @@ run_worker_first = true
 
 # Production variables (non-secret)
 [vars]
-APY_SERVER_URL = "http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com"
-REBUILD_WEBHOOK_URL = "http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com/rebuild"
+APY_SERVER_URL = "http://localhost:3737"
+REBUILD_WEBHOOK_URL = "http://localhost:3737"
 
 # SECURITY: REBUILD_SHARED_SECRET must be set as a Cloudflare Worker secret, NOT in wrangler.toml
 # Set it using: echo "SECRET_VALUE" | npx wrangler secret put REBUILD_SHARED_SECRET
@@ -22,6 +22,6 @@ REBUILD_WEBHOOK_URL = "http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com
 [env.dev]
 [env.dev.vars]
 # Local development only
-APY_SERVER_URL = "http://localhost:2737"
+APY_SERVER_URL = "http://localhost:3737"
 # For local testing only; set production values as Worker secrets/vars in Dashboard
-REBUILD_WEBHOOK_URL = "http://localhost/rebuild"
+REBUILD_WEBHOOK_URL = "http://localhost:3737"
