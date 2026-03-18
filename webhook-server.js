@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Simple webhook server for EC2 to trigger Apertium rebuilds
- * Listens on port 9100 and executes the rebuild script in Docker
+ * Listens on port 8081 and executes the rebuild script in Docker
  */
 
 import http from 'http';
