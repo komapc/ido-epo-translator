@@ -15,7 +15,7 @@ StandardError=journal
 SyslogIdentifier=apertium-webhook
 
 # Environment variables
-Environment="PORT=9100"
+Environment="PORT=8081"
 Environment="NODE_ENV=production"
 # Set REBUILD_SHARED_SECRET via systemd override or environment file
 # EnvironmentFile=-/opt/ido-epo-translator/.env
