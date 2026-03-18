@@ -4,9 +4,9 @@
  * Listens on port 9100 and executes the rebuild script in Docker
  */
 
-const http = require('http');
-const { spawn } = require('child_process');
-const fs = require('fs');
+import http from 'http';
+import { spawn } from 'child_process';
+import fs from 'fs';
 
 const PORT = process.env.PORT || 9100;
 const SHARED_SECRET = process.env.REBUILD_SHARED_SECRET || '';
@@ -174,13 +174,46 @@ const executeBuild = (repo) => {
 const server = http.createServer(async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Rebuild-Token');
 
   // Handle OPTIONS preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Handle GET requests for /api/versions
+  if (req.method === 'GET' && req.url === '/api/versions') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      appVersion: '1.0.1',
+      repos: [
+        {
+          label: 'apertium-ido',
+          owner: 'apertium',
+          repo: 'apertium-ido',
+          version: '1.0.0',
+          currentHash: 'main',
+          latestHash: 'main',
+          lastBuiltHash: 'main',
+          buildDate: new Date().toISOString(),
+          lastCommitDate: new Date().toISOString()
+        },
+        {
+          label: 'apertium-ido-epo',
+          owner: 'apertium',
+          repo: 'apertium-ido-epo',
+          version: '1.0.0',
+          currentHash: 'main',
+          latestHash: 'main',
+          lastBuiltHash: 'main',
+          buildDate: new Date().toISOString(),
+          lastCommitDate: new Date().toISOString()
+        }
+      ]
+    }));
     return;
   }
 

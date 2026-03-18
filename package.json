@@ -1,13 +1,13 @@
 {
   "name": "ido-epo-translator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ido-Esperanto Web Translator - Full-featured translation with Apertium",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "VITE_APP_VERSION=$npm_package_version npx vite build && npm run postbuild",
-    "build:pages": "VITE_APP_VERSION=$npm_package_version npx vite build --base=/ido-epo-translator/ && npm run postbuild",
+    "build:pages": "VITE_API_URL=https://ido-epo-translator.komapc.workers.dev/api/translate VITE_APP_VERSION=$npm_package_version npx vite build && npm run postbuild",
     "postbuild": "node public/generate_sitemap.cjs",
     "preview": "npx vite preview",
     "cf:dev": "npx wrangler dev --assets dist",

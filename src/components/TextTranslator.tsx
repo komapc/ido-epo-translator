@@ -85,8 +85,10 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
 
     setIsLoading(true)
     try {
-      // Use Cloudflare Function as proxy (avoids mixed content HTTPS->HTTP issue)
-      const response = await fetch('/api/translate', {
+      // Use API endpoint (Cloudflare Worker for Pages, local for dev)
+      const apiUrl = import.meta.env.VITE_API_URL || '/api/translate'
+      const endpoint = apiUrl.startsWith('http') ? apiUrl : `${apiUrl}`
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -16,7 +16,8 @@ const RepoVersions = () => {
   useEffect(() => {
     const run = async () => {
       try {
-        const res = await fetch('/api/versions')
+        const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'http://127.0.0.1:9100'
+        const res = await fetch(`${webhookUrl}/api/versions`)
         const data = await res.json().catch(() => ({}))
         if (data?.appVersion) setAppVersion(String(data.appVersion))
         if (Array.isArray(data?.repos)) setRepos(data.repos)
