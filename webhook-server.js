@@ -8,7 +8,7 @@ import http from 'http';
 import { spawn } from 'child_process';
 import fs from 'fs';
 
-const PORT = process.env.PORT || 9100;
+const PORT = process.env.PORT || 8081;
 const SHARED_SECRET = process.env.REBUILD_SHARED_SECRET || '';
 const LOG_FILE = '/var/log/apertium-rebuild.log';
 
@@ -330,8 +330,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 // Start server
-server.listen(PORT, '127.0.0.1', () => {
-  log(`Webhook server listening on http://127.0.0.1:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  log(`Webhook server listening on http://0.0.0.0:${PORT}`);
   log(`Shared secret ${SHARED_SECRET ? 'enabled' : 'disabled'}`);
 });
 
