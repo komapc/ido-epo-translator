@@ -40,7 +40,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
     const fetchRepos = async () => {
         setLoading(true)
         try {
-            const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'http://127.0.0.1:9100'
+            const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || ''
             const res = await fetch(`${webhookUrl}/api/versions`)
             const data = await res.json()
 
