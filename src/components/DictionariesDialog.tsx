@@ -109,7 +109,10 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         try {
             const res = await fetch('/api/admin/pull-repo', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${import.meta.env.VITE_ADMIN_TOKEN || ''}`,
+                },
                 body: JSON.stringify({ repo: repoLabel })
             })
 
@@ -160,7 +163,10 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         try {
             const res = await fetch('/api/admin/build-repo', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${import.meta.env.VITE_ADMIN_TOKEN || ''}`,
+                },
                 body: JSON.stringify({ repo: repoLabel })
             })
 
