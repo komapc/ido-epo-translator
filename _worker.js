@@ -241,13 +241,6 @@ export default {
 
 
 
-      if (url.pathname.startsWith('/api/admin/')) {
-        const authHeader = request.headers.get('Authorization') || ''
-        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
-        if (!ADMIN_PASSWORD || token !== ADMIN_PASSWORD) {
-          return sendJson(401, { error: 'Unauthorized' })
-        }
-      }
 
       if (request.method === 'POST' && subpath === '/admin/pull-repo') {
         try {
