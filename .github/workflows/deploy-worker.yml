@@ -38,4 +38,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx wrangler --version
-          npx wrangler pages deploy dist --project-name ido-tradukilo --commit-dirty=true
+          npx wrangler pages deploy dist \
+            --project-name ido-tradukilo \
+            --commit-dirty=true
