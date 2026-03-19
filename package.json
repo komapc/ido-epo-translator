@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "VITE_APP_VERSION=$npm_package_version npx vite build && npm run postbuild",
     "build:pages": "VITE_API_URL=https://ido-epo-translator.komapc.workers.dev/api/translate VITE_APP_VERSION=$npm_package_version npx vite build && npm run postbuild",
-    "postbuild": "node public/generate_sitemap.cjs",
+    "postbuild": "node public/generate_sitemap.cjs && cp _worker.js dist/_worker.js",
     "preview": "npx vite preview",
     "cf:dev": "npx wrangler dev --assets dist",
     "cf:deploy": "npx wrangler deploy",
