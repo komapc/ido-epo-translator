@@ -13,14 +13,15 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const [copied, setCopied] = useState(false)
   const [useColorMode, setUseColorMode] = useState(true)
 
-  // Replace all exotic Unicode space characters with a normal space; collapse all whitespace to single spaces
+  // Replace exotic Unicode spaces with normal spaces; collapse runs of spaces (but preserve newlines)
   const normalizeDisplayWhitespace = (text: string): string => {
     if (!text) return ''
-    // Normalize exotic spaces to regular space
     const unicodeSpaces = /[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]/g
     let out = text.replace(unicodeSpaces, ' ')
-    // Normalize all whitespace (including newlines, tabs) to single spaces
-    out = out.replace(/\s+/g, ' ')
+    // Collapse multiple spaces (not newlines) to a single space
+    out = out.replace(/[ \t]+/g, ' ')
+    // Collapse more than two consecutive newlines to two
+    out = out.replace(/\n{3,}/g, '\n\n')
     return out.trim()
   }
 
@@ -42,25 +43,31 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const renderColoredOutput = (text: string) => {
     if (!text) return null
     const normalized = normalizeDisplayWhitespace(text)
-    const segments = normalized.split(/(\s+)/)
-    return segments.map((segment, index) => {
-      if (/^\s+$/.test(segment)) return ' '
-      const hasUnknown = segment.includes('*')
-      const hasAmbiguous = segment.includes('#')
-      const hasGenError = segment.includes('@')
-      if (useColorMode) {
-        const clean = segment.replace(/[\*#@]/g, '')
-        if (!hasUnknown && !hasGenError && !hasAmbiguous) {
-          // No markers → return raw text to keep native flow and kerning
-          return clean
-        }
-        let colorClass = 'text-white'
-        if (hasUnknown) colorClass = 'text-red-400 font-semibold'
-        else if (hasGenError) colorClass = 'text-orange-400 font-semibold'
-        else if (hasAmbiguous) colorClass = 'text-yellow-300'
-        return <span key={index} className={`${colorClass} inline`}>{clean}</span>
-      }
-      return segment
+    // Split into paragraphs first, then process words within each
+    const paragraphs = normalized.split(/\n\n+/)
+    return paragraphs.map((para, pIdx) => {
+      const lines = para.split(/\n/)
+      const renderedLines = lines.map((line, lIdx) => {
+        const segments = line.split(/(\s+)/)
+        const renderedSegments = segments.map((segment, sIdx) => {
+          if (/^\s+$/.test(segment)) return ' '
+          const hasUnknown = segment.includes('*')
+          const hasAmbiguous = segment.includes('#')
+          const hasGenError = segment.includes('@')
+          if (useColorMode) {
+            const clean = segment.replace(/[*#@]/g, '')
+            if (!hasUnknown && !hasGenError && !hasAmbiguous) return clean
+            let colorClass = 'text-white'
+            if (hasUnknown) colorClass = 'text-red-400 font-semibold'
+            else if (hasGenError) colorClass = 'text-orange-400 font-semibold'
+            else if (hasAmbiguous) colorClass = 'text-yellow-300'
+            return <span key={sIdx} className={`${colorClass} inline`}>{clean}</span>
+          }
+          return segment
+        })
+        return <span key={lIdx}>{renderedSegments}{lIdx < lines.length - 1 && <br />}</span>
+      })
+      return <p key={pIdx} className="mb-2 last:mb-0">{renderedLines}</p>
     })
   }
 

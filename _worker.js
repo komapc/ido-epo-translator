@@ -18,6 +18,13 @@ export default {
     }
     const ADMIN_PASSWORD = env.ADMIN_PASSWORD || ''
 
+    const escapeHtml = (s) => s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -156,9 +163,10 @@ export default {
             }
 
             // Determine if pull/build is needed
-            const needsPull = latestHash && currentHash && latestHash !== currentHash
-            const needsBuild = needsPull // If pulled, needs rebuild
-            const isUpToDate = latestHash && currentHash && latestHash === currentHash
+            const needsPull = !!(latestHash && currentHash && latestHash !== currentHash)
+            const lastBuilt = ec2Status?.repositories?.find(r => r.repo === label)?.lastBuiltHash || currentHash
+            const needsBuild = !!(currentHash && lastBuilt !== currentHash)
+            const isUpToDate = !!(latestHash && currentHash && latestHash === currentHash && !needsBuild)
 
             return {
               label,
@@ -171,7 +179,7 @@ export default {
               currentHash,
               commitDate,
               commitMessage,
-              lastBuiltHash: currentHash, // Same as current for now
+              lastBuiltHash: ec2Status?.repositories?.find(r => r.repo === label)?.lastBuiltHash || currentHash,
               needsPull,
               needsBuild,
               isUpToDate,
@@ -232,6 +240,14 @@ export default {
       }
 
 
+
+      if (url.pathname.startsWith('/api/admin/')) {
+        const authHeader = request.headers.get('Authorization') || ''
+        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+        if (!ADMIN_PASSWORD || token !== ADMIN_PASSWORD) {
+          return sendJson(401, { error: 'Unauthorized' })
+        }
+      }
 
       if (request.method === 'POST' && subpath === '/admin/pull-repo') {
         try {
@@ -373,8 +389,9 @@ export default {
         // Simple translation preview logic (just for the meta tag)
         const langFrom = dir === 'ido-epo' ? 'Ido' : 'Esperanto'
         const langTo = dir === 'ido-epo' ? 'Esperanto' : 'Ido'
-        const title = `${q} - ${langFrom} to ${langTo} Translation`
-        const description = `Translate "${q}" from ${langFrom} to ${langTo} instantly with the Ido-Esperanto Translator.`
+        const safeQ = escapeHtml(q.slice(0, 200))
+        const title = `${safeQ} - ${langFrom} to ${langTo} Translation`
+        const description = `Translate &quot;${safeQ}&quot; from ${langFrom} to ${langTo} instantly with the Ido-Esperanto Translator.`
         
         // Inject tags before </head>
         const metaTags = `

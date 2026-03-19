@@ -9,7 +9,7 @@ const Footer = ({ onAboutClick, lang }: FooterProps) => {
   const translations = {
     io: {
       projects: 'Mea projekti',
-      resources: 'Rersursi',
+      resources: 'Resursi',
       contact: 'Kontakto',
       about: 'Pri la projekto',
       code: 'kodo'
