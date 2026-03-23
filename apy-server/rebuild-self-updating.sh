@@ -79,7 +79,7 @@ build_repo() {
         ./autogen.sh > /tmp/autogen-$name.log 2>&1 || { echo "    ✗ autogen.sh failed:"; tail -5 /tmp/autogen-$name.log; return 1; }
         ./configure > /tmp/configure-$name.log 2>&1 || { echo "    ✗ configure failed:"; tail -5 /tmp/configure-$name.log; return 1; }
     fi
-    make 2>&1 | tail -10
+    make -B 2>&1 | tail -10
     sudo make install 2>&1 | tail -5 || make install 2>&1 | tail -5 || echo "    (install step skipped - binaries built in-place)"
     sudo ldconfig 2>/dev/null || ldconfig 2>/dev/null || true
     echo "    ✓ Done"
