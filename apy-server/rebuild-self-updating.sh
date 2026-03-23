@@ -80,8 +80,8 @@ build_repo() {
         ./configure > /tmp/configure-$name.log 2>&1 || { echo "    ✗ configure failed:"; tail -5 /tmp/configure-$name.log; return 1; }
     fi
     make 2>&1 | tail -10
-    make install > /dev/null 2>&1
-    ldconfig
+    sudo make install 2>&1 | tail -5 || make install 2>&1 | tail -5 || echo "    (install step skipped - binaries built in-place)"
+    sudo ldconfig 2>/dev/null || ldconfig 2>/dev/null || true
     echo "    ✓ Done"
 }
 
@@ -97,5 +97,5 @@ build_repo /opt/apertium/apertium-ido-epo apertium-ido-epo
 echo ""
 echo "✅ Rebuild complete!"
 echo ""
-echo "Note: Restart APy server to use new dictionaries:"
-echo "  docker-compose restart"
+echo "🔄 Restarting APy server..."
+sudo systemctl restart apy-server 2>/dev/null && echo "✅ APy restarted" || echo "⚠️  Could not restart APy (may need manual restart)"
