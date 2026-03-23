@@ -74,6 +74,8 @@ build_repo() {
     cd "$dir"
     # Always remove any existing Makefile (may contain machine-local paths from git)
     rm -f Makefile
+    # automake requires these files to exist on a clean checkout
+    touch ChangeLog NEWS COPYING INSTALL 2>/dev/null || true
     echo "    (running autogen+configure...)"
     ./autogen.sh > /tmp/autogen-$name.log 2>&1 || { echo "    ✗ autogen.sh failed:"; tail -5 /tmp/autogen-$name.log; return 1; }
     ./configure > /tmp/configure-$name.log 2>&1 || { echo "    ✗ configure failed:"; tail -5 /tmp/configure-$name.log; return 1; }
