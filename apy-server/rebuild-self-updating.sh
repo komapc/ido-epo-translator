@@ -68,38 +68,30 @@ fi
 echo ""
 echo "🔨 Rebuilding dictionaries..."
 
+build_repo() {
+    local dir="$1" name="$2"
+    echo "  - Building $name..."
+    cd "$dir"
+    make clean > /dev/null 2>&1 || true
+    # autogen.sh/configure only needed if Makefile is missing; repos commit their Makefile
+    if [ ! -f Makefile ]; then
+        ./autogen.sh > /dev/null 2>&1
+        ./configure > /dev/null 2>&1
+    fi
+    make 2>&1 | tail -5
+    make install > /dev/null 2>&1
+    ldconfig
+    echo "    ✓ Done"
+}
+
 # Rebuild apertium-ido
-echo "  - Building apertium-ido..."
-cd /opt/apertium/apertium-ido
-make clean > /dev/null 2>&1
-./autogen.sh > /dev/null 2>&1
-./configure > /dev/null 2>&1
-make > /dev/null 2>&1
-make install > /dev/null 2>&1
-ldconfig
-echo "    ✓ Done"
+build_repo /opt/apertium/apertium-ido apertium-ido
 
 # Rebuild apertium-epo
-echo "  - Building apertium-epo..."
-cd /opt/apertium/apertium-epo
-make clean > /dev/null 2>&1
-./autogen.sh > /dev/null 2>&1
-./configure > /dev/null 2>&1
-make > /dev/null 2>&1
-make install > /dev/null 2>&1
-ldconfig
-echo "    ✓ Done"
+build_repo /opt/apertium/apertium-epo apertium-epo
 
 # Rebuild apertium-ido-epo
-echo "  - Building apertium-ido-epo..."
-cd /opt/apertium/apertium-ido-epo
-make clean > /dev/null 2>&1
-./autogen.sh > /dev/null 2>&1
-./configure > /dev/null 2>&1
-make > /dev/null 2>&1
-make install > /dev/null 2>&1
-ldconfig
-echo "    ✓ Done"
+build_repo /opt/apertium/apertium-ido-epo apertium-ido-epo
 
 echo ""
 echo "✅ Rebuild complete!"

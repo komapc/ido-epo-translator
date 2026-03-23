@@ -46,17 +46,17 @@ echo "Building commit: $CURRENT_HASH"
 echo "Cleaning previous build..."
 make clean > /dev/null 2>&1 || true
 
-# Generate build files
-echo "Running autogen.sh..."
-./autogen.sh > /dev/null 2>&1
-
-# Configure
-echo "Configuring..."
-./configure > /dev/null 2>&1
+# autogen.sh/configure only needed if Makefile is missing; repos commit their Makefile
+if [ ! -f Makefile ]; then
+    echo "Running autogen.sh..."
+    ./autogen.sh > /dev/null 2>&1
+    echo "Configuring..."
+    ./configure > /dev/null 2>&1
+fi
 
 # Build
 echo "Building..."
-make > /dev/null 2>&1
+make 2>&1 | tail -10
 
 # Install
 echo "Installing..."
