@@ -73,12 +73,13 @@ build_repo() {
     echo "  - Building $name..."
     cd "$dir"
     make clean > /dev/null 2>&1 || true
-    # autogen.sh/configure only needed if Makefile is missing; repos commit their Makefile
+    # Generate build files if Makefile is absent
     if [ ! -f Makefile ]; then
-        ./autogen.sh > /dev/null 2>&1
-        ./configure > /dev/null 2>&1
+        echo "    (no Makefile, running autogen+configure...)"
+        ./autogen.sh > /tmp/autogen-$name.log 2>&1 || { echo "    ✗ autogen.sh failed:"; tail -5 /tmp/autogen-$name.log; return 1; }
+        ./configure > /tmp/configure-$name.log 2>&1 || { echo "    ✗ configure failed:"; tail -5 /tmp/configure-$name.log; return 1; }
     fi
-    make 2>&1 | tail -5
+    make 2>&1 | tail -10
     make install > /dev/null 2>&1
     ldconfig
     echo "    ✓ Done"
