@@ -124,3 +124,5 @@ echo "la" | lt-proc "$INSTALL_DIR/ido-epo.automorf.bin" 2>/dev/null | apertium-p
 
 echo "  installed mode file (first line):"
 head -1 /usr/local/share/apertium/modes/ido-epo.mode 2>/dev/null || echo "    (mode file not found)"
+echo "  APy process: $(pgrep -a python3 | grep apy | head -1)"
+echo "  t1x def count (should be 0 sp, 4+ sg): sp=$(grep -c 'def.*sp\|sp.*def' $INSTALL_DIR/apertium-ido-epo.ido-epo.t1x 2>/dev/null), sg=$(grep -c 'lit-tag v=\"sg\"' $INSTALL_DIR/apertium-ido-epo.ido-epo.t1x 2>/dev/null)"
