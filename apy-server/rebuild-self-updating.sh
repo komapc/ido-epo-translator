@@ -110,15 +110,17 @@ sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-
 sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-epo.epo-ido.t1x" 2>/dev/null && echo "  ✓ epo-ido.t1x source updated" || true
 
 echo ""
-echo "🔄 Restarting APy server..."
-# Show service status before restart
-echo "  Services found: $(systemctl list-units --type=service 2>/dev/null | grep -i apy | awk '{print $1}' | tr '\n' ' ')"
-# Try multiple service names
-sudo systemctl restart apy-server 2>/dev/null && echo "✅ apy-server restarted" || \
-sudo systemctl restart apy 2>/dev/null && echo "✅ apy restarted" || \
-(sudo pkill -f "apertium_apy" 2>/dev/null && sleep 2 && sudo systemctl start apy-server 2>/dev/null; echo "⚠️  Used pkill fallback")
-sleep 2
-echo "  APy PID after restart: $(pgrep -a python3 | grep apy | awk '{print $1}')"
+echo "🔄 Restarting APy server (apy.service)..."
+if sudo systemctl restart apy 2>/dev/null; then
+    echo "✅ apy.service restarted"
+else
+    echo "⚠️  systemctl restart apy failed, trying pkill..."
+    sudo pkill -f "apertium_apy" 2>/dev/null || true
+    sleep 2
+    sudo systemctl start apy 2>/dev/null || true
+fi
+sleep 3
+echo "  APy PID after restart: $(pgrep -a python3 2>/dev/null | grep apy | awk '{print $1}')"
 
 echo ""
 echo "🔍 Diagnostics: testing installed pipeline..."
