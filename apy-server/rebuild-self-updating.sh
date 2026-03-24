@@ -110,17 +110,23 @@ sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-
 sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-epo.epo-ido.t1x" 2>/dev/null && echo "  ✓ epo-ido.t1x source updated" || true
 
 echo ""
-echo "🔄 Restarting APy server (apy.service)..."
-if sudo systemctl restart apy 2>/dev/null; then
-    echo "✅ apy.service restarted"
-else
-    echo "⚠️  systemctl restart apy failed, trying pkill..."
-    sudo pkill -f "apertium_apy" 2>/dev/null || true
-    sleep 2
-    sudo systemctl start apy 2>/dev/null || true
+echo "🔄 Restarting APy server..."
+OLD_APY_PID=$(pgrep -f "apertium_apy" 2>/dev/null || pgrep -a python3 2>/dev/null | grep apy | awk '{print $1}')
+echo "  Old APy PID: ${OLD_APY_PID:-none}"
+# Kill old APy process directly
+if [ -n "$OLD_APY_PID" ]; then
+    sudo kill -9 $OLD_APY_PID 2>/dev/null && echo "  ✓ Killed old APy (PID $OLD_APY_PID)" || echo "  (kill returned non-zero)"
+    sleep 1
 fi
+# Start fresh via systemd
+sudo systemctl start apy 2>/dev/null || sudo systemctl start apy-server 2>/dev/null || true
 sleep 3
-echo "  APy PID after restart: $(pgrep -a python3 2>/dev/null | grep apy | awk '{print $1}')"
+NEW_APY_PID=$(pgrep -f "apertium_apy" 2>/dev/null || pgrep -a python3 2>/dev/null | grep apy | awk '{print $1}')
+if [ "$NEW_APY_PID" != "$OLD_APY_PID" ] && [ -n "$NEW_APY_PID" ]; then
+    echo "✅ APy restarted (new PID: $NEW_APY_PID)"
+else
+    echo "⚠️  APy may not have restarted (PID: ${NEW_APY_PID:-none})"
+fi
 
 echo ""
 echo "🔍 Diagnostics: testing installed pipeline..."
