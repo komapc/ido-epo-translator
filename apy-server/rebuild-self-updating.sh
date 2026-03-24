@@ -100,26 +100,24 @@ build_repo /opt/apertium/apertium-ido-epo apertium-ido-epo
 echo ""
 echo "✅ Rebuild complete!"
 echo ""
+
+# apertium-transfer reads ACTIONS from the .t1x SOURCE file at runtime (not .bin)
+# Must copy before APy starts, otherwise APy loads the old source into memory.
+INSTALL_DIR="/usr/local/share/apertium/apertium-ido-epo"
+BUILD_DIR="/opt/apertium/apertium-ido-epo"
+echo "📋 Ensuring t1x source files are up-to-date in install dir..."
+sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" && echo "  ✓ ido-epo.t1x source updated" || echo "  ✗ ido-epo.t1x source copy failed"
+sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-epo.epo-ido.t1x" 2>/dev/null && echo "  ✓ epo-ido.t1x source updated" || true
+
+echo ""
 echo "🔄 Restarting APy server..."
 sudo systemctl restart apy-server 2>/dev/null && echo "✅ APy restarted" || echo "⚠️  Could not restart APy (may need manual restart)"
 
 echo ""
 echo "🔍 Diagnostics: testing installed pipeline..."
-INSTALL_DIR="/usr/local/share/apertium/apertium-ido-epo"
-BUILD_DIR="/opt/apertium/apertium-ido-epo"
 echo "  Installed dir: $(ls $INSTALL_DIR/*.bin 2>/dev/null | wc -l) .bin files"
-echo "  t1x test (build dir):"
-echo "la" | lt-proc "$BUILD_DIR/ido-epo.automorf.bin" 2>/dev/null | apertium-pretransfer -n 2>/dev/null | lt-proc -b "$BUILD_DIR/ido-epo.autobil.bin" 2>/dev/null | apertium-transfer -b "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$BUILD_DIR/ido-epo.t1x.bin" 2>/dev/null | lt-proc -g "$BUILD_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la ->"
-echo "  autogen test (installed):"
-echo "^la<det><def><sg><nom>$" | lt-proc -g "$INSTALL_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la<det><def><sg><nom> ->"
-echo "  autogen test (build dir):"
-echo "^la<det><def><sg><nom>$" | lt-proc -g "$BUILD_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la<det><def><sg><nom> ->"
-
-# apertium-transfer reads ACTIONS from the .t1x SOURCE file at runtime (not .bin)
-# The .bin only handles pattern matching. So the installed .t1x source MUST be up-to-date.
-echo "  Forcing t1x source copy to install dir..."
-sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" && echo "    ✓ t1x source updated" || echo "    ✗ t1x source copy failed"
-sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-epo.epo-ido.t1x" 2>/dev/null || true
+echo "  installed pipeline test (la → ?):"
+echo "la" | lt-proc "$INSTALL_DIR/ido-epo.automorf.bin" 2>/dev/null | apertium-pretransfer -n 2>/dev/null | lt-proc -b "$INSTALL_DIR/ido-epo.autobil.bin" 2>/dev/null | apertium-transfer -b "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/ido-epo.t1x.bin" 2>/dev/null | lt-proc -g "$INSTALL_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la ->"
 
 echo "  installed t1x test (INSTALLED source + INSTALLED bin - same as APy):"
 echo "la" | lt-proc "$INSTALL_DIR/ido-epo.automorf.bin" 2>/dev/null | apertium-pretransfer -n 2>/dev/null | lt-proc -b "$INSTALL_DIR/ido-epo.autobil.bin" 2>/dev/null | apertium-transfer -b "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/ido-epo.t1x.bin" 2>/dev/null | lt-proc -g "$INSTALL_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la ->"
