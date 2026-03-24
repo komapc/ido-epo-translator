@@ -114,7 +114,15 @@ echo "  autogen test (installed):"
 echo "^la<det><def><sg><nom>$" | lt-proc -g "$INSTALL_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la<det><def><sg><nom> ->"
 echo "  autogen test (build dir):"
 echo "^la<det><def><sg><nom>$" | lt-proc -g "$BUILD_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la<det><def><sg><nom> ->"
-echo "  installed t1x.bin test (full installed pipeline):"
-echo "la" | lt-proc "$INSTALL_DIR/ido-epo.automorf.bin" 2>/dev/null | apertium-pretransfer -n 2>/dev/null | lt-proc -b "$INSTALL_DIR/ido-epo.autobil.bin" 2>/dev/null | apertium-transfer -b "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/ido-epo.t1x.bin" 2>/dev/null | lt-proc -g "$INSTALL_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la ->"
+
+# apertium-transfer reads ACTIONS from the .t1x SOURCE file at runtime (not .bin)
+# The .bin only handles pattern matching. So the installed .t1x source MUST be up-to-date.
+echo "  Forcing t1x source copy to install dir..."
+sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" && echo "    ✓ t1x source updated" || echo "    ✗ t1x source copy failed"
+sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-epo.epo-ido.t1x" 2>/dev/null || true
+
+echo "  installed t1x test (INSTALLED source + INSTALLED bin - same as APy):"
+echo "la" | lt-proc "$INSTALL_DIR/ido-epo.automorf.bin" 2>/dev/null | apertium-pretransfer -n 2>/dev/null | lt-proc -b "$INSTALL_DIR/ido-epo.autobil.bin" 2>/dev/null | apertium-transfer -b "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/ido-epo.t1x.bin" 2>/dev/null | lt-proc -g "$INSTALL_DIR/ido-epo.autogen.bin" 2>/dev/null | xargs echo "    la ->"
+
 echo "  installed mode file (first line):"
 head -1 /usr/local/share/apertium/modes/ido-epo.mode 2>/dev/null || echo "    (mode file not found)"
