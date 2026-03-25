@@ -390,6 +390,7 @@ export default {
         const metaTags = `
     <title>${title}</title>
     <meta name="description" content="${description}">
+    <link rel="canonical" href="${url.href}">
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="twitter:title" content="${title}">
@@ -397,6 +398,7 @@ export default {
         `
         // Replace existing generic title/desc if they exist, or just prepend
         html = html.replace('<title>Ido-Esperanto Translator</title>', '')
+        html = html.replace(/<link rel="canonical" href="https:\/\/ido-tradukilo\.pages\.dev\/">/, '')
         html = html.replace('</head>', `${metaTags}\n  </head>`)
         
         return new Response(html, {
