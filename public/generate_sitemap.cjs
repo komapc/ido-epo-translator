@@ -29,10 +29,12 @@ try {
     topEntries.forEach(entry => {
       const lemma = entry.lemma;
       const encoded = encodeURIComponent(lemma);
+      const now = new_date().toISOString().split('T')[0];
       
       // Ido -> Esperanto
       sitemap += `  <url>
     <loc>${DOMAIN}/?q=${encoded}&amp;dir=ido-epo</loc>
+    <lastmod>${now}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>\n`;

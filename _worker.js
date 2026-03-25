@@ -386,6 +386,15 @@ export default {
         const title = `${safeQ} - ${langFrom} to ${langTo} Translation`
         const description = `Translate &quot;${safeQ}&quot; from ${langFrom} to ${langTo} instantly with the Ido-Esperanto Translator.`
         
+        const breadcrumbData = {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Tradukilo", "item": "https://ido-tradukilo.pages.dev/" },
+            { "@type": "ListItem", "position": 2, "name": safeQ, "item": url.href }
+          ]
+        };
+
         // Inject tags before </head>
         const metaTags = `
     <title>${title}</title>
@@ -395,6 +404,7 @@ export default {
     <meta property="og:description" content="${description}">
     <meta property="twitter:title" content="${title}">
     <meta property="twitter:description" content="${description}">
+    <script type="application/ld+json">${JSON.stringify(breadcrumbData)}</script>
         `
         // Replace existing generic title/desc if they exist, or just prepend
         html = html.replace('<title>Ido-Esperanto Translator</title>', '')
