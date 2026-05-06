@@ -31,10 +31,18 @@ interface RepoStatus {
     buildMessage?: string
 }
 
+interface VortaroStats {
+    totalEntries: number
+    sourceStats: Record<string, number>
+    lastUpdated: string | null
+    version: string | null
+}
+
 const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
     const [repos, setRepos] = useState<RepoInfo[]>([])
     const [loading, setLoading] = useState(false)
     const [repoStatuses, setRepoStatuses] = useState<Record<string, RepoStatus>>({})
+    const [vortaroStats, setVortaroStats] = useState<VortaroStats | null>(null)
     const dialogRef = useRef<HTMLDivElement>(null)
 
     const fetchRepos = async () => {
@@ -71,9 +79,32 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         }
     }
 
+    const fetchVortaroStats = async () => {
+        // Pull the published vortaro dictionary metadata directly from
+        // the static-hosted Cloudflare Pages deploy. Contains source_stats.
+        try {
+            const res = await fetch('https://ido-vortaro.pages.dev/dictionary.json', {
+                cache: 'no-cache',
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            const meta = data?.metadata
+            if (!meta) return
+            setVortaroStats({
+                totalEntries: meta.total_unique_ido_words ?? 0,
+                sourceStats: meta.source_stats ?? {},
+                lastUpdated: meta.last_updated ?? null,
+                version: meta.version ?? null,
+            })
+        } catch (e) {
+            console.error('Failed to fetch vortaro stats:', e)
+        }
+    }
+
     useEffect(() => {
         if (isOpen) {
             fetchRepos()
+            fetchVortaroStats()
         }
     }, [isOpen])
 
@@ -253,6 +284,40 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                         </div>
                     ) : (
                         <div className="space-y-6">
+                            {/* Dictionary statistics (from vortaro) */}
+                            {vortaroStats && (
+                                <div className="bg-gray-700 rounded-lg p-6">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-lg font-medium text-white">
+                                            Dictionary statistics
+                                        </h3>
+                                        <span className="text-sm text-gray-400">
+                                            {vortaroStats.version && `v${vortaroStats.version}`}
+                                            {vortaroStats.lastUpdated && ` · updated ${formatDate(vortaroStats.lastUpdated)}`}
+                                        </span>
+                                    </div>
+                                    <div className="text-2xl font-semibold text-white mb-3">
+                                        {vortaroStats.totalEntries.toLocaleString()}
+                                        <span className="text-sm font-normal text-gray-400 ml-2">
+                                            unique Ido words
+                                        </span>
+                                    </div>
+                                    <div className="text-xs text-gray-400 mb-1">By source:</div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                        {Object.entries(vortaroStats.sourceStats)
+                                            .sort((a, b) => b[1] - a[1])
+                                            .map(([src, count]) => (
+                                                <div key={src} className="flex justify-between">
+                                                    <span className="text-gray-300">{src}</span>
+                                                    <span className="text-white font-mono">
+                                                        {count.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {repos.map((repo) => {
                                 const status = repoStatuses[repo.label] || { pullStatus: 'idle', buildStatus: 'idle' }
 
