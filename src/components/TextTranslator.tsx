@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Loader2, Copy, CheckCircle, Shuffle } from 'lucide-react'
+import HistoryPanel from './HistoryPanel'
+import { useTranslationHistory, type HistoryEntry } from '../hooks/useTranslationHistory'
 
 interface TextTranslatorProps {
   direction: 'ido-epo' | 'epo-ido'
@@ -12,6 +14,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const [isLoadingArticle, setIsLoadingArticle] = useState(false)
   const [copied, setCopied] = useState(false)
   const [useColorMode, setUseColorMode] = useState(true)
+  const { history, addEntry, removeEntry, clearAll } = useTranslationHistory()
 
   // Replace exotic Unicode spaces with normal spaces; collapse runs of spaces (but preserve newlines)
   const normalizeDisplayWhitespace = (text: string): string => {
@@ -107,7 +110,12 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       })
 
       const data = await response.json()
-      setOutputText(data.translation || 'Translation failed')
+      const translation = data.translation || 'Translation failed'
+      setOutputText(translation)
+      // Persist to history (only when we got a non-error response)
+      if (data.translation) {
+        addEntry({ direction, input: inputText, output: translation })
+      }
     } catch (error) {
       console.error('Translation error:', error)
       setOutputText('Error: Could not connect to translation service')
@@ -122,7 +130,17 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleRestore = (entry: HistoryEntry) => {
+    if (entry.direction !== direction) {
+      // Direction switch is handled by the parent via tab; for now just note it.
+      // Restoring the input means the user can re-translate (or hit translate again).
+    }
+    setInputText(entry.input)
+    setOutputText(entry.output)
+  }
+
   return (
+    <>
     <div className="grid md:grid-cols-2 gap-6">
       {/* Input Panel */}
       <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-xl">
@@ -242,6 +260,13 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         </div>
       </div>
     </div>
+    <HistoryPanel
+      entries={history.filter(e => e.direction === direction)}
+      onRestore={handleRestore}
+      onRemove={removeEntry}
+      onClear={clearAll}
+    />
+    </>
   )
 }
 
