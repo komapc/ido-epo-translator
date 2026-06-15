@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ido-epo-translator.komapc.workers.dev/sitemap.xml
+Sitemap: https://ido-tradukilo.pages.dev/sitemap.xml

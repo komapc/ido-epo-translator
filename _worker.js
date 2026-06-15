@@ -378,22 +378,40 @@ export default {
       
       if (response.status === 200 && (url.pathname === '/' || url.pathname === '/index.html') && q) {
         let html = await response.text()
-        
-        // Simple translation preview logic (just for the meta tag)
+
         const langFrom = dir === 'ido-epo' ? 'Ido' : 'Esperanto'
         const langTo = dir === 'ido-epo' ? 'Esperanto' : 'Ido'
         const safeQ = escapeHtml(q.slice(0, 200))
-        const title = `${safeQ} - ${langFrom} to ${langTo} Translation`
-        const description = `Translate &quot;${safeQ}&quot; from ${langFrom} to ${langTo} instantly with the Ido-Esperanto Translator.`
-        
-        const breadcrumbData = {
+
+        // Fetch the actual translation so the page has real, unique content
+        // (title/description + a crawler-visible <noscript> block) instead of a
+        // result-less placeholder. Best-effort: fall back to meta-only on error.
+        let translated = ''
+        try {
+          const langpair = dir.replace('-', '|')
+          const tr = await fetch(`${APY_SERVER_URL}/translate?langpair=${encodeURIComponent(langpair)}&q=${encodeURIComponent(q.slice(0, 200))}`)
+          if (tr.ok) {
+            const d = await tr.json()
+            translated = (d.responseData?.translatedText || '').trim()
+          }
+        } catch (_) { /* meta-only fallback */ }
+        const safeT = escapeHtml(translated.slice(0, 200))
+
+        const title = safeT
+          ? `${safeQ} → ${safeT} — ${langFrom}-${langTo} Translation`
+          : `${safeQ} - ${langFrom} to ${langTo} Translation`
+        const description = safeT
+          ? `"${safeQ}" (${langFrom}) translates to "${safeT}" (${langTo}). Free Ido-Esperanto machine translation powered by Apertium.`
+          : `Translate &quot;${safeQ}&quot; from ${langFrom} to ${langTo} instantly with the Ido-Esperanto Translator.`
+
+        const ld = [{
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           "itemListElement": [
             { "@type": "ListItem", "position": 1, "name": "Tradukilo", "item": "https://ido-tradukilo.pages.dev/" },
             { "@type": "ListItem", "position": 2, "name": safeQ, "item": url.href }
           ]
-        };
+        }]
 
         // Inject tags before </head>
         const metaTags = `
@@ -404,13 +422,21 @@ export default {
     <meta property="og:description" content="${description}">
     <meta property="twitter:title" content="${title}">
     <meta property="twitter:description" content="${description}">
-    <script type="application/ld+json">${JSON.stringify(breadcrumbData)}</script>
+    ${ld.map((d) => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n    ')}
         `
         // Replace existing generic title/desc if they exist, or just prepend
         html = html.replace('<title>Ido-Esperanto Translator</title>', '')
         html = html.replace(/<link rel="canonical" href="https:\/\/ido-tradukilo\.pages\.dev\/">/, '')
         html = html.replace('</head>', `${metaTags}\n  </head>`)
-        
+
+        // Crawler-visible result, outside React's #root (React never wipes it),
+        // so the query page has real content without affecting the JS UI.
+        if (safeT) {
+          const noscriptBlock = `<noscript><div id="ssr-translation"><h1>${safeQ} → ${safeT}</h1>`
+            + `<p>${langFrom} to ${langTo} translation of "${safeQ}": ${safeT}. Free Ido-Esperanto machine translation.</p></div></noscript>`
+          html = html.replace('<div id="root"></div>', `<div id="root"></div>${noscriptBlock}`)
+        }
+
         return new Response(html, {
           headers: response.headers
         })
