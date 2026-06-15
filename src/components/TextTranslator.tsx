@@ -21,6 +21,14 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     if (!text) return ''
     const unicodeSpaces = /[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]/g
     let out = text.replace(unicodeSpaces, ' ')
+    // Drop the unreliable Apertium "#" generation-failure marker. It is a mix
+    // of false positives on correct closed-class words (e.g. La<det>, Kiu<prn>,
+    // whose echoed surface form is actually right) and honest gaps lt-proc
+    // cannot tell apart, so we hide it everywhere while keeping "*" (unknown)
+    // and "@" (bidix gap). This used to be done by a `sed s/#//g` stage inside
+    // the apertium mode; it now lives here so the shared, upstreamable
+    // ido-epo mode stays a pure apertium/lttoolbox/cg pipeline.
+    out = out.replace(/#/g, '')
     // Collapse multiple spaces (not newlines) to a single space
     out = out.replace(/[ \t]+/g, ' ')
     // Collapse more than two consecutive newlines to two
