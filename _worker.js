@@ -424,8 +424,9 @@ export default {
     <meta property="twitter:description" content="${description}">
     ${ld.map((d) => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n    ')}
         `
-        // Replace existing generic title/desc if they exist, or just prepend
-        html = html.replace('<title>Ido-Esperanto Translator</title>', '')
+        // Remove the static title (the literal no longer matched the real
+        // homepage title, leaving two <title>s). Use a regex like the canonical.
+        html = html.replace(/<title>.*?<\/title>/, '')
         html = html.replace(/<link rel="canonical" href="https:\/\/ido-tradukilo\.pages\.dev\/">/, '')
         html = html.replace('</head>', `${metaTags}\n  </head>`)
 
