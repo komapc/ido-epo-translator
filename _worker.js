@@ -25,6 +25,19 @@ export default {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;')
 
+    // index.html statically defines <title>, canonical, description, and
+    // OG/Twitter meta tags. When the worker injects per-page versions of
+    // those same tags it must replace the static one in place (matched
+    // structurally by its distinguishing attribute, e.g. rel="canonical" or
+    // property="og:title" — never by a hardcoded value like a specific URL,
+    // which would silently stop matching on preview/custom domains) rather
+    // than leaving it and appending a second copy. Falls back to inserting
+    // before </head> if no existing tag matches.
+    const replaceOrInsertMetaTag = (html, matchRegex, newTag) =>
+      matchRegex.test(html)
+        ? html.replace(matchRegex, newTag)
+        : html.replace('</head>', `${newTag}\n  </head>`)
+
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -413,22 +426,21 @@ export default {
           ]
         }]
 
-        // Inject tags before </head>
-        const metaTags = `
-    <title>${title}</title>
-    <meta name="description" content="${description}">
-    <link rel="canonical" href="${url.href}">
-    <meta property="og:title" content="${title}">
-    <meta property="og:description" content="${description}">
-    <meta property="twitter:title" content="${title}">
-    <meta property="twitter:description" content="${description}">
-    ${ld.map((d) => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n    ')}
-        `
-        // Remove the static title (the literal no longer matched the real
-        // homepage title, leaving two <title>s). Use a regex like the canonical.
-        html = html.replace(/<title>.*?<\/title>/, '')
-        html = html.replace(/<link rel="canonical" href="https:\/\/ido-tradukilo\.pages\.dev\/">/, '')
-        html = html.replace('</head>', `${metaTags}\n  </head>`)
+        // Each of these 7 tags also exists statically in index.html, so
+        // replace that static tag in place instead of appending a duplicate.
+        html = replaceOrInsertMetaTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
+        html = replaceOrInsertMetaTag(html, /<link\b[^>]*\brel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${url.href}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bname=["']description["'][^>]*>/i, `<meta name="description" content="${description}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${title}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${description}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']twitter:title["'][^>]*>/i, `<meta property="twitter:title" content="${title}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']twitter:description["'][^>]*>/i, `<meta property="twitter:description" content="${description}">`)
+
+        // The per-page breadcrumb JSON-LD has no static equivalent in
+        // index.html (which only has an unrelated SoftwareApplication
+        // block), so it's always appended rather than replaced.
+        const ldTags = ld.map((d) => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n    ')
+        html = html.replace('</head>', `    ${ldTags}\n  </head>`)
 
         // Crawler-visible result, outside React's #root (React never wipes it),
         // so the query page has real content without affecting the JS UI.
