@@ -4,6 +4,16 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
+
+    // Yandex Webmaster verification: must serve at this exact .html path with
+    // a 200, not the 308 Cloudflare Pages issues for .html extensions by default.
+    if (url.pathname === '/yandex_fe73d9bf92172294.html') {
+      return new Response(
+        '<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n    <body>Verification: fe73d9bf92172294</body>\n</html>\n',
+        { headers: { 'content-type': 'text/html; charset=UTF-8' } }
+      );
+    }
+
     const APY_SERVER_URL = (env.APY_SERVER_URL || 'http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com').replace(/\/$/, '')
     // Handle the case where Wrangler passes variables as string keys
     let VERSION = env.APP_VERSION || 'dev'
