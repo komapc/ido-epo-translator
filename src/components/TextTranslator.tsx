@@ -63,15 +63,13 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         const renderedSegments = segments.map((segment, sIdx) => {
           if (/^\s+$/.test(segment)) return ' '
           const hasUnknown = segment.includes('*')
-          const hasAmbiguous = segment.includes('#')
           const hasGenError = segment.includes('@')
           if (useColorMode) {
             const clean = segment.replace(/[*#@]/g, '')
-            if (!hasUnknown && !hasGenError && !hasAmbiguous) return clean
+            if (!hasUnknown && !hasGenError) return clean
             let colorClass = 'text-white'
             if (hasUnknown) colorClass = 'text-red-400 font-semibold'
             else if (hasGenError) colorClass = 'text-orange-400 font-semibold'
-            else if (hasAmbiguous) colorClass = 'text-yellow-300'
             return <span key={sIdx} className={`${colorClass} inline`}>{clean}</span>
           }
           return segment
