@@ -80,6 +80,14 @@ build_repo() {
     echo "    (running autogen+configure...)"
     ./autogen.sh > /tmp/autogen-$name.log 2>&1 || { echo "    ✗ autogen.sh failed:"; tail -5 /tmp/autogen-$name.log; return 1; }
     ./configure > /tmp/configure-$name.log 2>&1 || { echo "    ✗ configure failed:"; tail -5 /tmp/configure-$name.log; return 1; }
+    # A full rebuild on this 1GB box can OOM the whole instance if no swap is
+    # configured (see apertium-terraform#15). Refuse to proceed without it.
+    if [ -z "$(swapon --show 2>/dev/null)" ]; then
+        echo "    ✗ No swap configured — refusing to run 'make -B' on this 1GB box:"
+        echo "      a full rebuild without swap risks OOMing the whole instance."
+        echo "      Add swap first (see apertium-terraform#15), then re-run."
+        return 1
+    fi
     echo "    (building - forced rebuild of all targets...)"
     make -B 2>&1 | tee /tmp/make-$name.log | tail -20
     echo "    (installing...)"
