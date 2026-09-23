@@ -119,21 +119,22 @@ sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-
 
 echo ""
 echo "🔄 Restarting APy server..."
-OLD_APY_PID=$(pgrep -f "apertium_apy" 2>/dev/null || pgrep -a python3 2>/dev/null | grep apy | awk '{print $1}')
-echo "  Old APy PID: ${OLD_APY_PID:-none}"
-# Kill old APy process directly
-if [ -n "$OLD_APY_PID" ]; then
-    sudo kill -9 $OLD_APY_PID 2>/dev/null && echo "  ✓ Killed old APy (PID $OLD_APY_PID)" || echo "  (kill returned non-zero)"
-    sleep 1
-fi
-# Start fresh via systemd
-sudo systemctl start apy 2>/dev/null || sudo systemctl start apy-server 2>/dev/null || true
-sleep 3
-NEW_APY_PID=$(pgrep -f "apertium_apy" 2>/dev/null || pgrep -a python3 2>/dev/null | grep apy | awk '{print $1}')
-if [ "$NEW_APY_PID" != "$OLD_APY_PID" ] && [ -n "$NEW_APY_PID" ]; then
+# Production APy is apy-server.service (/opt/apertium-apy/apy.py). Restart it
+# via systemd and verify by its MainPID. Do NOT pgrep/kill by name: the
+# duplicate apy.service (python3 -m apertium_apy.apy) crash-loops on the same
+# port, so a name match killed that loser and left the real server running the
+# old pipeline, while the "new PID" check reported success.
+APY_UNIT=apy-server
+OLD_APY_PID=$(systemctl show "$APY_UNIT" -p MainPID --value 2>/dev/null)
+echo "  Old APy PID ($APY_UNIT): ${OLD_APY_PID:-none}"
+sudo systemctl restart "$APY_UNIT"
+sleep 5
+NEW_APY_PID=$(systemctl show "$APY_UNIT" -p MainPID --value 2>/dev/null)
+if [ -n "$NEW_APY_PID" ] && [ "$NEW_APY_PID" != "0" ] && [ "$NEW_APY_PID" != "$OLD_APY_PID" ] && systemctl is-active --quiet "$APY_UNIT"; then
     echo "✅ APy restarted (new PID: $NEW_APY_PID)"
 else
-    echo "⚠️  APy may not have restarted (PID: ${NEW_APY_PID:-none})"
+    echo "❌ APy did NOT restart ($APY_UNIT PID: ${NEW_APY_PID:-none}, was ${OLD_APY_PID:-none})"
+    exit 1
 fi
 
 echo ""
