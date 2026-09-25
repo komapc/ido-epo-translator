@@ -38,6 +38,29 @@ interface VortaroStats {
     version: string | null
 }
 
+const ADMIN_TOKEN_KEY = 'adminToken'
+
+// Admin routes require the ADMIN_PASSWORD configured on the Pages project.
+// Ask once per tab; forget it if the worker rejects it.
+const adminFetch = async (path: string, body: unknown): Promise<Response> => {
+    let token = ''
+    try { token = sessionStorage.getItem(ADMIN_TOKEN_KEY) || '' } catch { }
+    if (!token) {
+        token = window.prompt('Admin password') || ''
+        if (!token) throw new Error('Admin password required')
+        try { sessionStorage.setItem(ADMIN_TOKEN_KEY, token) } catch { }
+    }
+    const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(body)
+    })
+    if (res.status === 401) {
+        try { sessionStorage.removeItem(ADMIN_TOKEN_KEY) } catch { }
+    }
+    return res
+}
+
 const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
     const [repos, setRepos] = useState<RepoInfo[]>([])
     const [loading, setLoading] = useState(false)
@@ -138,11 +161,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         }))
 
         try {
-            const res = await fetch('/api/admin/pull-repo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ repo: repoLabel })
-            })
+            const res = await adminFetch('/api/admin/pull-repo', { repo: repoLabel })
 
             const data = await res.json()
 
@@ -189,11 +208,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         }))
 
         try {
-            const res = await fetch('/api/admin/build-repo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ repo: repoLabel })
-            })
+            const res = await adminFetch('/api/admin/build-repo', { repo: repoLabel })
 
             const data = await res.json()
 

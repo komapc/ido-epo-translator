@@ -171,7 +171,9 @@ Check the webhook server logs on EC2:
 ssh ... "sudo journalctl -u webhook-server -n 50"
 ```
 
-The webhook validates requests via `REBUILD_SHARED_SECRET`. If the secret is missing from Pages env vars, all admin calls will fail at the EC2 level.
+The webhook validates requests via `REBUILD_SHARED_SECRET` and **refuses to start** if it is unset on EC2 (set it in the `webhook-server` systemd unit / EnvironmentFile). The same value must be a Pages secret, or all admin calls fail at the EC2 level with 401. Only one pull/build/rebuild runs at a time; a concurrent request gets 409.
+
+The worker's `/api/admin/*` routes additionally require `Authorization: Bearer <ADMIN_PASSWORD>` (the Dictionaries dialog prompts for it once per tab). With `ADMIN_PASSWORD` unset they return 503.
 
 ### Pages deployment doesn't update the live site
 
@@ -201,6 +203,8 @@ If missing, check the `postbuild` script in `package.json`:
 | `REBUILD_WEBHOOK_URL` | EC2 webhook base URL | `http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:8081/rebuild` |
 | `APP_VERSION` | Shown in health + footer | `1.0.1` |
 | `GITHUB_TOKEN` | (optional) Avoid GitHub rate limits on `/api/versions` | — |
+| `ADMIN_PASSWORD` | (secret) Required for `/api/admin/*`; unset = admin disabled | — |
+| `REBUILD_SHARED_SECRET` | (secret) Sent to the EC2 webhook; must match EC2 | — |
 
 ---
 
