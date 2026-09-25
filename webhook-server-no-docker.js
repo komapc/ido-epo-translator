@@ -7,11 +7,31 @@
 
 const http = require('http');
 const { spawn } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 
 const PORT = process.env.PORT || 8081;
 const SHARED_SECRET = process.env.REBUILD_SHARED_SECRET || '';
 const LOG_FILE = '/var/log/apertium-rebuild.log';
+const MAX_BODY_BYTES = 10 * 1024;
+
+// Fail closed: every endpoint (including /rebuild, which runs `make -B` on a
+// 1GB box) is reachable from the internet, so never serve without a secret.
+if (!SHARED_SECRET) {
+    console.error('REBUILD_SHARED_SECRET is not set; refusing to start.');
+    process.exit(1);
+}
+
+const tokenMatches = (token) => {
+    if (typeof token !== 'string') return false;
+    const a = Buffer.from(token);
+    const b = Buffer.from(SHARED_SECRET);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
+// Only one pull/build/rebuild at a time: two concurrent `make` runs OOM the
+// box, and a client timeout + retry would otherwise start a second one.
+let busyWith = null;
 
 // Log helper
 const log = (message) => {
@@ -180,184 +200,207 @@ const server = http.createServer(async (req, res) => {
 
     log(`Received ${req.method} ${req.url} from ${req.socket.remoteAddress}`);
 
-    // Verify shared secret if configured
-    if (SHARED_SECRET) {
-        const token = req.headers['x-rebuild-token'];
-        if (token !== SHARED_SECRET) {
-            log('Request rejected: invalid token');
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Unauthorized' }));
-            return;
-        }
+    if (!tokenMatches(req.headers['x-rebuild-token'])) {
+        log('Request rejected: invalid token');
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized' }));
+        return;
     }
 
     // Parse request body
     let body = '';
+    let tooLarge = false;
     req.on('data', chunk => {
+        if (tooLarge) return;
         body += chunk.toString();
+        if (body.length > MAX_BODY_BYTES) {
+            tooLarge = true;
+            res.writeHead(413, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Request body too large' }));
+            req.destroy();
+        }
     });
 
     req.on('end', async () => {
-        let requestData = {};
+        if (tooLarge) return;
+
+        const mutating = ['/rebuild', '/pull-repo', '/build-repo'].includes(req.url);
+        if (mutating && busyWith) {
+            log(`Request rejected: busy with ${busyWith}`);
+            res.writeHead(409, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: `Another operation is in progress: ${busyWith}` }));
+            return;
+        }
+        if (mutating) busyWith = req.url;
         try {
-            requestData = JSON.parse(body);
-        } catch (e) {
-            // Ignore parse errors for empty body
+            await handleRoute(req, res, body);
+        } finally {
+            // Released only once the child process has exited, not when the
+            // client disconnects — the build keeps running after a timeout.
+            if (mutating) busyWith = null;
+        }
+    });
+});
+
+const handleRoute = async (req, res, body) => {
+    let requestData = {};
+    try {
+        requestData = JSON.parse(body);
+    } catch (e) {
+        // Ignore parse errors for empty body
+    }
+
+    // Route handling
+    if (req.url === '/rebuild') {
+        // Full rebuild
+        try {
+            const result = await executeRebuild();
+            res.writeHead(202, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'accepted',
+                message: 'Rebuild completed successfully',
+                log: result.stdout.split('\n').slice(-20).join('\n')
+            }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'error',
+                message: 'Rebuild failed',
+                error: err.error || 'Unknown error',
+                log: (err.stderr || err.stdout || '').split('\n').slice(-20).join('\n')
+            }));
+        }
+    } else if (req.url === '/pull-repo') {
+        // Pull specific repository
+        const repo = requestData.repo;
+        if (!repo || !['ido', 'epo', 'bilingual'].includes(repo)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid repo parameter' }));
+            return;
         }
 
-        // Route handling
-        if (req.url === '/rebuild') {
-            // Full rebuild
-            try {
-                const result = await executeRebuild();
-                res.writeHead(202, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'accepted',
-                    message: 'Rebuild completed successfully',
-                    log: result.stdout.split('\n').slice(-20).join('\n')
-                }));
-            } catch (err) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'error',
-                    message: 'Rebuild failed',
-                    error: err.error || 'Unknown error',
-                    log: (err.stderr || err.stdout || '').split('\n').slice(-20).join('\n')
-                }));
-            }
-        } else if (req.url === '/pull-repo') {
-            // Pull specific repository
-            const repo = requestData.repo;
-            if (!repo || !['ido', 'epo', 'bilingual'].includes(repo)) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Invalid repo parameter' }));
-                return;
-            }
+        try {
+            const result = await executePull(repo);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'success',
+                repo,
+                changes: result.changes,
+                message: result.changes.hasChanges ?
+                    `Updated: ${result.changes.commitCount} new commits` :
+                    'Already up to date'
+            }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'error',
+                repo,
+                message: 'Pull failed',
+                error: err.error || 'Unknown error'
+            }));
+        }
+    } else if (req.url === '/build-repo') {
+        // Build specific repository
+        const repo = requestData.repo;
+        if (!repo || !['ido', 'epo', 'bilingual'].includes(repo)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid repo parameter' }));
+            return;
+        }
 
-            try {
-                const result = await executePull(repo);
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'success',
-                    repo,
-                    changes: result.changes,
-                    message: result.changes.hasChanges ?
-                        `Updated: ${result.changes.commitCount} new commits` :
-                        'Already up to date'
-                }));
-            } catch (err) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'error',
-                    repo,
-                    message: 'Pull failed',
-                    error: err.error || 'Unknown error'
-                }));
-            }
-        } else if (req.url === '/build-repo') {
-            // Build specific repository
-            const repo = requestData.repo;
-            if (!repo || !['ido', 'epo', 'bilingual'].includes(repo)) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Invalid repo parameter' }));
-                return;
-            }
+        try {
+            const result = await executeBuild(repo);
+            res.writeHead(202, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'accepted',
+                repo,
+                message: 'Build completed successfully',
+                log: result.stdout.split('\n').slice(-10).join('\n')
+            }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'error',
+                repo,
+                message: 'Build failed',
+                error: err.error || 'Unknown error',
+                log: (err.stderr || err.stdout || '').split('\n').slice(-10).join('\n')
+            }));
+        }
+    } else if (req.url === '/status') {
+        // Get current status of all repositories
+        try {
+            const repos = ['ido', 'epo', 'bilingual'];
+            const repoMap = {
+                'ido': '/opt/apertium/apertium-ido',
+                'epo': '/opt/apertium/apertium-epo',
+                'bilingual': '/opt/apertium/apertium-ido-epo'
+            };
 
-            try {
-                const result = await executeBuild(repo);
-                res.writeHead(202, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'accepted',
-                    repo,
-                    message: 'Build completed successfully',
-                    log: result.stdout.split('\n').slice(-10).join('\n')
-                }));
-            } catch (err) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'error',
-                    repo,
-                    message: 'Build failed',
-                    error: err.error || 'Unknown error',
-                    log: (err.stderr || err.stdout || '').split('\n').slice(-10).join('\n')
-                }));
-            }
-        } else if (req.url === '/status') {
-            // Get current status of all repositories
-            try {
-                const repos = ['ido', 'epo', 'bilingual'];
-                const repoMap = {
-                    'ido': '/opt/apertium/apertium-ido',
-                    'epo': '/opt/apertium/apertium-epo',
-                    'bilingual': '/opt/apertium/apertium-ido-epo'
-                };
+            const getRepoStatus = (repo) => {
+                return new Promise((resolve) => {
+                    const repoDir = repoMap[repo];
+                    // Get hash, date, and commit message
+                    const git = spawn('git', ['-C', repoDir, 'log', '-1', '--format=%H|%cI|%s']);
+                    let output = '';
 
-                const getRepoStatus = (repo) => {
-                    return new Promise((resolve) => {
-                        const repoDir = repoMap[repo];
-                        // Get hash, date, and commit message
-                        const git = spawn('git', ['-C', repoDir, 'log', '-1', '--format=%H|%cI|%s']);
-                        let output = '';
+                    git.stdout.on('data', (data) => {
+                        output += data.toString().trim();
+                    });
 
-                        git.stdout.on('data', (data) => {
-                            output += data.toString().trim();
-                        });
-
-                        git.on('close', (code) => {
-                            if (code === 0 && output) {
-                                const [hash, date, message] = output.split('|');
-                                resolve({
-                                    repo,
-                                    currentHash: hash,
-                                    commitDate: date,
-                                    commitMessage: message
-                                });
-                            } else {
-                                resolve({
-                                    repo,
-                                    currentHash: null,
-                                    commitDate: null,
-                                    commitMessage: null
-                                });
-                            }
-                        });
-
-                        git.on('error', () => {
+                    git.on('close', (code) => {
+                        if (code === 0 && output) {
+                            const [hash, date, message] = output.split('|');
+                            resolve({
+                                repo,
+                                currentHash: hash,
+                                commitDate: date,
+                                commitMessage: message
+                            });
+                        } else {
                             resolve({
                                 repo,
                                 currentHash: null,
                                 commitDate: null,
                                 commitMessage: null
                             });
+                        }
+                    });
+
+                    git.on('error', () => {
+                        resolve({
+                            repo,
+                            currentHash: null,
+                            commitDate: null,
+                            commitMessage: null
                         });
                     });
-                };
+                });
+            };
 
-                const statuses = await Promise.all(repos.map(getRepoStatus));
+            const statuses = await Promise.all(repos.map(getRepoStatus));
 
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'ok',
-                    repositories: statuses
-                }));
-            } catch (err) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    status: 'error',
-                    error: err.message || 'Unknown error'
-                }));
-            }
-        } else {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Not found' }));
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'ok',
+                repositories: statuses
+            }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'error',
+                error: err.message || 'Unknown error'
+            }));
         }
-    });
-});
+    } else {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Not found' }));
+    }
+};
 
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
     log(`Webhook server listening on http://0.0.0.0:${PORT}`);
-    log(`Shared secret ${SHARED_SECRET ? 'enabled' : 'disabled'}`);
 });
 
 // Graceful shutdown
