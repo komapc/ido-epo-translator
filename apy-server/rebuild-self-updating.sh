@@ -2,7 +2,8 @@
 # Self-updating rebuild script for Apertium dictionaries
 # This script pulls its own latest version from GitHub before running
 
-set -e
+# pipefail: `make ... | tee | tail` must fail when make fails, not when tail does.
+set -eo pipefail
 
 SCRIPT_URL="https://raw.githubusercontent.com/komapc/ido-epo-translator/main/apy-server/rebuild-self-updating.sh"
 SCRIPT_PATH="/opt/apertium/rebuild.sh"
@@ -91,8 +92,8 @@ build_repo() {
     echo "    (building - forced rebuild of all targets...)"
     make -B 2>&1 | tee /tmp/make-$name.log | tail -20
     echo "    (installing...)"
-    sudo make install 2>&1 | tail -5 || make install 2>&1 | tail -5 || echo "    (install step skipped - binaries built in-place)"
-    sudo ldconfig 2>/dev/null || ldconfig 2>/dev/null || true
+    sudo make install 2>&1 | tail -5
+    sudo ldconfig
     echo "    ✓ Done"
 }
 
@@ -114,7 +115,8 @@ echo ""
 INSTALL_DIR="/usr/local/share/apertium/apertium-ido-epo"
 BUILD_DIR="/opt/apertium/apertium-ido-epo"
 echo "📋 Ensuring t1x source files are up-to-date in install dir..."
-sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x" && echo "  ✓ ido-epo.t1x source updated" || echo "  ✗ ido-epo.t1x source copy failed"
+sudo cp -f "$BUILD_DIR/apertium-ido-epo.ido-epo.t1x" "$INSTALL_DIR/apertium-ido-epo.ido-epo.t1x"
+echo "  ✓ ido-epo.t1x source updated"
 sudo cp -f "$BUILD_DIR/apertium-ido-epo.epo-ido.t1x" "$INSTALL_DIR/apertium-ido-epo.epo-ido.t1x" 2>/dev/null && echo "  ✓ epo-ido.t1x source updated" || true
 
 echo ""
