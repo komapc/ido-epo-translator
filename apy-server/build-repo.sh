@@ -1,7 +1,8 @@
 #!/bin/bash
 # Script to build and install a specific Apertium repository
 
-set -e
+# pipefail: `make ... | tail` must fail when make fails, not when tail does.
+set -eo pipefail
 
 REPO=$1
 
@@ -42,33 +43,47 @@ cd "$REPO_DIR"
 CURRENT_HASH=$(git rev-parse HEAD)
 echo "Building commit: $CURRENT_HASH"
 
-# Clean previous build
-echo "Cleaning previous build..."
-make clean > /dev/null 2>&1 || true
+# Same build recipe as rebuild-self-updating.sh: the committed Makefile may
+# contain machine-local paths, so always regenerate it.
+rm -f Makefile
+touch ChangeLog NEWS COPYING INSTALL AUTHORS
+echo "Running autogen.sh + configure..."
+./autogen.sh > "/tmp/autogen-$REPO.log" 2>&1 || { tail -5 "/tmp/autogen-$REPO.log"; exit 1; }
+./configure > "/tmp/configure-$REPO.log" 2>&1 || { tail -5 "/tmp/configure-$REPO.log"; exit 1; }
 
-# autogen.sh/configure only needed if Makefile is missing; repos commit their Makefile
-if [ ! -f Makefile ]; then
-    echo "Running autogen.sh..."
-    ./autogen.sh > /dev/null 2>&1
-    echo "Configuring..."
-    ./configure > /dev/null 2>&1
+# Compiling the monodix/bidix on this 1GB box OOMs the instance without swap.
+if [ -z "$(swapon --show 2>/dev/null)" ]; then
+    echo "Error: no swap configured; refusing to build on this 1GB box"
+    exit 1
 fi
 
-# Build
 echo "Building..."
-make 2>&1 | tail -10
+make 2>&1 | tee "/tmp/make-$REPO.log" | tail -10
 
-# Install
 echo "Installing..."
-make install > /dev/null 2>&1
+sudo make install 2>&1 | tail -5
+sudo ldconfig
 
-# Update library cache
-ldconfig
+# apertium-transfer reads the .t1x SOURCE at runtime; see rebuild-self-updating.sh.
+if [ "$REPO" = "bilingual" ]; then
+    INSTALL_DIR="/usr/local/share/apertium/apertium-ido-epo"
+    sudo cp -f apertium-ido-epo.ido-epo.t1x "$INSTALL_DIR/"
+    sudo cp -f apertium-ido-epo.epo-ido.t1x "$INSTALL_DIR/"
+fi
 
-# Record build information
-BUILD_TIME=$(date -Iseconds)
+# Restart the serving APy and verify by MainPID (see rebuild-self-updating.sh
+# for why this must not match processes by name).
+APY_UNIT=apy-server
+OLD_APY_PID=$(systemctl show "$APY_UNIT" -p MainPID --value 2>/dev/null)
+sudo systemctl restart "$APY_UNIT"
+sleep 5
+NEW_APY_PID=$(systemctl show "$APY_UNIT" -p MainPID --value 2>/dev/null)
+if [ -z "$NEW_APY_PID" ] || [ "$NEW_APY_PID" = "0" ] || [ "$NEW_APY_PID" = "$OLD_APY_PID" ] || ! systemctl is-active --quiet "$APY_UNIT"; then
+    echo "Error: APy did not restart ($APY_UNIT PID: ${NEW_APY_PID:-none}, was ${OLD_APY_PID:-none})"
+    exit 1
+fi
+echo "APy restarted (new PID: $NEW_APY_PID)"
+
 echo "BUILD_HASH=$CURRENT_HASH"
-echo "BUILD_TIME=$BUILD_TIME"
-
+echo "BUILD_TIME=$(date -Iseconds)"
 echo "=== Build complete for $REPO ==="
-echo "Note: Restart APy server to use new dictionaries: docker-compose restart"

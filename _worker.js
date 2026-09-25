@@ -28,6 +28,17 @@ export default {
     }
     const ADMIN_PASSWORD = env.ADMIN_PASSWORD || ''
 
+    // Constant-time comparison: hash both sides so lengths match, then XOR.
+    const secretsEqual = async (a, b) => {
+      const enc = new TextEncoder()
+      const [ha, hb] = await Promise.all([a, b].map(v =>
+        crypto.subtle.digest('SHA-256', enc.encode(v))))
+      const va = new Uint8Array(ha), vb = new Uint8Array(hb)
+      let diff = 0
+      for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i]
+      return diff === 0
+    }
+
     const escapeHtml = (s) => s
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -51,7 +62,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     }
 
     if (request.method === 'OPTIONS') {
@@ -67,6 +78,20 @@ export default {
     // API: /api/*
     if (url.pathname.startsWith('/api/')) {
       const subpath = url.pathname.replace(/^\/api/, '') || '/'
+
+      // Admin routes trigger pull/build/rebuild on the 1GB EC2 box and the
+      // worker attaches the webhook secret itself, so they must be gated here.
+      // Fail closed: with no ADMIN_PASSWORD configured they are disabled.
+      if (subpath.startsWith('/admin/')) {
+        if (!ADMIN_PASSWORD) {
+          return sendJson(503, { error: 'Admin endpoints are disabled' })
+        }
+        const auth = request.headers.get('Authorization') || ''
+        const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+        if (!(await secretsEqual(token, ADMIN_PASSWORD))) {
+          return sendJson(401, { error: 'Unauthorized' })
+        }
+      }
 
       if (request.method === 'GET' && subpath === '/health') {
         return sendJson(200, { status: 'ok', version: VERSION, timestamp: new Date().toISOString() })
@@ -290,7 +315,6 @@ export default {
             return sendJson(502, {
               error: 'Failed to trigger repository pull',
               details: `Webhook returned ${webhookRes.status}`,
-              webhookUrl: env.REBUILD_WEBHOOK_URL,
               body: text?.slice(0, 2000),
             })
           }
@@ -340,7 +364,6 @@ export default {
             return sendJson(502, {
               error: 'Failed to trigger repository build',
               details: `Webhook returned ${webhookRes.status} for repo "${repo}"`,
-              webhookUrl: env.REBUILD_WEBHOOK_URL,
               webhookStatus: webhookRes.status,
               webhookBody: bodySnippet,
               ...(parsedError?.error && { webhookError: parsedError.error }),
@@ -375,7 +398,6 @@ export default {
             return sendJson(502, {
               error: 'Failed to trigger EC2 rebuild',
               details: `Webhook returned ${webhookRes.status}`,
-              webhookUrl: env.REBUILD_WEBHOOK_URL,
               body: text?.slice(0, 2000),
             })
           }
