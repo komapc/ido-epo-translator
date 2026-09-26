@@ -265,9 +265,7 @@ location /translate {
 
 ## Related Documentation
 
-- [Operations Guide](../../OPERATIONS.md) - Overall deployment and operations
-- [EC2 Setup](../../EC2_SETUP_NO_DOCKER.md) - EC2 server configuration
-- [Webhook Setup](../../WEBHOOK_SETUP_COMPLETE.md) - Webhook server setup
+- [Runbook](../../RUNBOOK.md) - EC2 backend, webhook and rebuild operations
 
 ## Version Control
 
