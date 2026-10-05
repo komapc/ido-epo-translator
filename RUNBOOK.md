@@ -175,6 +175,20 @@ The webhook validates requests via `REBUILD_SHARED_SECRET` and **refuses to star
 
 The worker's `/api/admin/*` routes additionally require `Authorization: Bearer <ADMIN_PASSWORD>` (the Dictionaries dialog prompts for it once per tab). With `ADMIN_PASSWORD` unset they return 503.
 
+### Rebuild fails with HTTP 500 "Unknown error" (`Permission denied` on `.deps`)
+
+The rebuild log in the response ends with `touch: cannot touch '.deps/.d': Permission denied`. The webhook runs as `ubuntu`, but files under `/opt/apertium/<repo>` are root-owned, left by a manual `sudo /opt/apertium/rebuild.sh`. Fix on EC2, then rebuild again:
+
+```bash
+sudo chown -R ubuntu:ubuntu /opt/apertium/apertium-ido /opt/apertium/apertium-ido-epo /opt/apertium/apertium-epo
+```
+
+Don't run `rebuild.sh` with `sudo` by hand; trigger it through the worker (`POST /api/admin/rebuild` with the admin bearer) or as `ubuntu`. After a rebuild, check that `systemctl show apy-server -p MainPID` changed.
+
+### SSH to EC2 times out
+
+Port 22 is restricted in the security group to the admin's current IP (dynamic). Update the SG rule when the IP changes. No Elastic IP: reboot the instance, never stop/start it.
+
 ### Pages deployment doesn't update the live site
 
 Verify `_worker.js` is in `dist/` after the build:
