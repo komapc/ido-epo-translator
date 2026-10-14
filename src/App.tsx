@@ -4,6 +4,7 @@ import TextTranslator from './components/TextTranslator'
 import DictionariesDialog from './components/DictionariesDialog'
 import RepoVersions from './components/RepoVersions'
 import Footer from './components/Footer'
+import SeoContent from './components/SeoContent'
 
 type LanguageDirection = 'ido-epo' | 'epo-ido'
 type AboutLang = 'io' | 'en' | 'eo'
@@ -153,6 +154,8 @@ const App = () => {
         <main className="max-w-7xl mx-auto">
           <TextTranslator direction={direction} />
         </main>
+
+        <SeoContent />
 
         {/* Dictionaries Dialog */}
         <DictionariesDialog
