@@ -1,4 +1,15 @@
+import { Fragment } from 'react'
 import { Info } from 'lucide-react'
+
+// Sibling projects shown in the footer. Edit this list to add/remove a link.
+const PROJECTS = [
+  { name: 'Vortaro', url: 'https://ido-vortaro.pages.dev/', code: 'https://github.com/komapc/vortaro' },
+  { name: 'Tradukilo', url: 'https://ido-tradukilo.pages.dev/', code: 'https://github.com/komapc/ido-epo-translator' },
+  { name: 'EchoDrift', url: 'https://echodrift.pages.dev/', code: 'https://github.com/komapc/phonomorph' },
+  { name: 'Hanzi-burst', url: 'https://hanzi-burst.komapc.workers.dev/', code: 'https://github.com/komapc/hanzi-burst' },
+  { name: 'Ideonology', url: 'https://komapc.github.io/ideon/en/', code: 'https://github.com/komapc/ideon' },
+  { name: 'min-co', url: 'https://komapc.github.io/contlang/', code: 'https://github.com/komapc/contlang' },
+]
 
 interface FooterProps {
   onAboutClick: () => void
@@ -37,24 +48,13 @@ const Footer = ({ onAboutClick, lang }: FooterProps) => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-3">
           <span className="opacity-80">{t.projects}:</span>
-          <a href="https://ido-vortaro.pages.dev/" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a> 
-          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/vortaro" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
-          
-          <span className="opacity-30">·</span>
-          <a href="https://ido-tradukilo.pages.dev/" className="text-white font-semibold hover:text-white transition-colors underline decoration-white/30 underline-offset-4">Tradukilo</a> 
-          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
-          
-          <span className="opacity-30">·</span>
-          <a href="https://echodrift.pages.dev/" className="text-white font-semibold hover:text-white transition-colors">EchoDrift</a> 
-          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/phonomorph" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
-
-          <span className="opacity-30">·</span>
-          <a href="https://hanzi-burst.komapc.workers.dev/" className="text-white font-semibold hover:text-white transition-colors">Hanzi-burst</a>
-          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/hanzi-burst" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
-
-          <span className="opacity-30">·</span>
-          <a href="https://komapc.github.io/ideon/en/" className="text-white font-semibold hover:text-white transition-colors">Ideonology</a>
-          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/ideon" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
+          {PROJECTS.map((p, i) => (
+            <Fragment key={p.url}>
+              {i > 0 && <span className="opacity-30">·</span>}
+              <a href={p.url} className="text-white font-semibold hover:text-white transition-colors">{p.name}</a>
+              <span className="text-xs opacity-50 -ml-2">(<a href={p.code} target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
+            </Fragment>
+          ))}
         </div>
         
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
