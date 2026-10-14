@@ -461,7 +461,11 @@ export default {
         // Each of these 7 tags also exists statically in index.html, so
         // replace that static tag in place instead of appending a duplicate.
         html = replaceOrInsertMetaTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
-        html = replaceOrInsertMetaTag(html, /<link\b[^>]*\brel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${url.href}">`)
+        // ?q= result pages exist for link previews/sharing, not for search:
+        // they are single-word duplicates of vortaro, ?q= takes arbitrary text
+        // (an unbounded, reflected crawl space that also hits the APY backend),
+        // and Bing already dropped them. noindex + canonical to the home page.
+        html = replaceOrInsertMetaTag(html, /<link\b[^>]*\brel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${url.origin}/">\n    <meta name="robots" content="noindex,follow">`)
         html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bname=["']description["'][^>]*>/i, `<meta name="description" content="${description}">`)
         html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${title}">`)
         html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${description}">`)
@@ -477,7 +481,7 @@ export default {
         // Crawler-visible result, outside React's #root (React never wipes it),
         // so the query page has real content without affecting the JS UI.
         if (safeT) {
-          const noscriptBlock = `<noscript><div id="ssr-translation"><h1>${safeQ} → ${safeT}</h1>`
+          const noscriptBlock = `<noscript><div id="ssr-translation"><h2>${safeQ} → ${safeT}</h2>`
             + `<p>${langFrom} to ${langTo} translation of "${safeQ}": ${safeT}. Free Ido-Esperanto machine translation.</p></div></noscript>`
           html = html.replace('<div id="root"></div>', `<div id="root"></div>${noscriptBlock}`)
         }

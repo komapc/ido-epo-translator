@@ -3,54 +3,27 @@ const path = require('path');
 
 const DOMAIN = 'https://ido-tradukilo.pages.dev';
 const publicDir = __dirname;
-const DICTIONARY_PATH = path.join(__dirname, '../../vortaro/dictionary.json');
 
-console.log('--- Generating Improved Sitemap for Translator ---');
+console.log('--- Generating Sitemap for Translator ---');
 
-let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+// Only the home page is listed. The ?q=<word> result pages are noindex'd in
+// _worker.js: they are thin single-word duplicates of the vortaro dictionary
+// pages, Bing dropped them from its index (150 -> 2 pages), and ?q= accepts
+// arbitrary text, so listing/indexing them invites index bloat and reflected
+// content.
+const today = new Date().toISOString().split('T')[0];
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${DOMAIN}/</loc>
-    <lastmod>${new_date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <lastmod>${today}</lastmod>
   </url>
+</urlset>
 `;
 
-try {
-  if (fs.existsSync(DICTIONARY_PATH)) {
-    const dictionary = JSON.parse(fs.readFileSync(DICTIONARY_PATH, 'utf8'));
-    const entries = dictionary.entries || [];
-    
-    // Add top 500 words as direct translation links
-    // This encourages Google to index the dynamic translation pages
-    const topEntries = entries.slice(0, 500);
-    
-    topEntries.forEach(entry => {
-      const lemma = entry.lemma;
-      const encoded = encodeURIComponent(lemma);
-      const now = new_date().toISOString().split('T')[0];
-      
-      // Ido -> Esperanto
-      sitemap += `  <url>
-    <loc>${DOMAIN}/?q=${encoded}&amp;dir=ido-epo</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>\n`;
-    });
-    
-    console.log(`Added 500 common translation links to sitemap.`);
-  } else {
-    console.warn('Dictionary not found at ' + DICTIONARY_PATH + '. Skipping word links.');
-  }
-} catch (e) {
-  console.error('Error processing dictionary for sitemap:', e);
-}
-
-sitemap += '</urlset>';
-
+// Write to public/ (source) and dist/ (already copied by Vite before this
+// postbuild step runs, so dist would otherwise ship the previous build's file).
 fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemap);
-console.log('✅ Improved Sitemap generated.');
-
-function new_date() { return new Date(); }
+const distDir = path.join(__dirname, '../dist');
+if (fs.existsSync(distDir)) fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemap);
+console.log('✅ Sitemap generated (1 URL).');
