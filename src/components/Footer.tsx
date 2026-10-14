@@ -47,6 +47,10 @@ const Footer = ({ onAboutClick, lang }: FooterProps) => {
           <span className="opacity-30">·</span>
           <a href="https://echodrift.pages.dev/" className="text-white font-semibold hover:text-white transition-colors">EchoDrift</a> 
           <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/phonomorph" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
+
+          <span className="opacity-30">·</span>
+          <a href="https://hanzi-burst.komapc.workers.dev/" className="text-white font-semibold hover:text-white transition-colors">Hanzi-burst</a>
+          <span className="text-xs opacity-50 -ml-2">(<a href="https://github.com/komapc/hanzi-burst" target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
         </div>
         
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
