@@ -12,11 +12,10 @@ const PROJECTS = [
 ]
 
 interface FooterProps {
-  onAboutClick: () => void
   lang: 'io' | 'en' | 'eo'
 }
 
-const Footer = ({ onAboutClick, lang }: FooterProps) => {
+const Footer = ({ lang }: FooterProps) => {
   const translations = {
     io: {
       projects: 'Mea projekti',
@@ -66,12 +65,12 @@ const Footer = ({ onAboutClick, lang }: FooterProps) => {
           <span>{t.contact}: <a href="mailto:komapc@gmail.com" className="text-white font-semibold hover:text-white transition-colors">komapc@gmail.com</a></span>
           
           <span className="opacity-30">·</span>
-          <button 
-            onClick={onAboutClick}
+          <a
+            href={`/about-${lang}`}
             className="text-white font-semibold hover:text-white transition-colors flex items-center gap-1"
           >
             <Info className="w-3.5 h-3.5" /> {t.about}
-          </button>
+          </a>
           
           <span className="bg-white/10 px-2 py-0.5 rounded font-mono text-[10px] opacity-60">v{import.meta.env.VITE_APP_VERSION || '1.0.0'}</span>
         </div>

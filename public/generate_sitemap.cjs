@@ -6,7 +6,7 @@ const publicDir = __dirname;
 
 console.log('--- Generating Sitemap for Translator ---');
 
-// Only the home page is listed. The ?q=<word> result pages are noindex'd in
+// The home page and the static /about-{io,en,eo} pages are listed. The ?q=<word> result pages are noindex'd in
 // _worker.js: they are thin single-word duplicates of the vortaro dictionary
 // pages, Bing dropped them from its index (150 -> 2 pages), and ?q= accepts
 // arbitrary text, so listing/indexing them invites index bloat and reflected
@@ -18,6 +18,10 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <loc>${DOMAIN}/</loc>
     <lastmod>${today}</lastmod>
   </url>
+${['io', 'en', 'eo'].map(l => `  <url>
+    <loc>${DOMAIN}/about-${l}</loc>
+    <lastmod>${today}</lastmod>
+  </url>`).join('\n')}
 </urlset>
 `;
 
@@ -26,4 +30,4 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemap);
 const distDir = path.join(__dirname, '../dist');
 if (fs.existsSync(distDir)) fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemap);
-console.log('✅ Sitemap generated (1 URL).');
+console.log('✅ Sitemap generated (4 URLs).');
