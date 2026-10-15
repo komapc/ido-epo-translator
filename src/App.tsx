@@ -8,6 +8,14 @@ import SeoContent from './components/SeoContent'
 
 type LanguageDirection = 'ido-epo' | 'epo-ido'
 
+// About pages exist in io/en/eo; pick by browser language (English by default)
+// so the header link and the footer link always agree.
+const pickAboutLang = (): 'io' | 'en' | 'eo' => {
+  const l = (typeof navigator !== 'undefined' && navigator.language || '').toLowerCase()
+  return l.startsWith('eo') ? 'eo' : l.startsWith('io') ? 'io' : 'en'
+}
+const ABOUT_LANG = pickAboutLang()
+
 const App = () => {
   const [direction, setDirection] = useState<LanguageDirection>('ido-epo')
   const [isDictionariesOpen, setIsDictionariesOpen] = useState(false)
@@ -56,7 +64,7 @@ const App = () => {
             Dictionaries
           </button>
           <a
-            href="/about-en"
+            href={`/about-${ABOUT_LANG}`}
             className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-all"
           >
             <Info className="w-4 h-4" />
@@ -97,7 +105,7 @@ const App = () => {
         />
 
         {/* Footer */}
-        <Footer lang="io" />
+        <Footer lang={ABOUT_LANG} />
         
         {/* Repo Versions (Stats) */}
         <div className="flex justify-center mt-8">
