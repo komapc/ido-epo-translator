@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DOMAIN = 'https://ido-tradukilo.pages.dev';
+const DOMAIN = 'https://tradukilo.lipu.dev';
 const publicDir = __dirname;
 
 console.log('--- Generating Sitemap for Translator ---');

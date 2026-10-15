@@ -1,16 +1,16 @@
 # Runbook — Ido-Esperanto Translator
 
-Operational guide for the live system at https://ido-tradukilo.pages.dev.
+Operational guide for the live system at https://tradukilo.lipu.dev.
 
 ---
 
 ## Quick health check
 
 ```bash
-curl https://ido-tradukilo.pages.dev/api/health
+curl https://tradukilo.lipu.dev/api/health
 # → {"status":"ok","version":"1.0.1",...}
 
-curl https://ido-tradukilo.pages.dev/api/versions
+curl https://tradukilo.lipu.dev/api/versions
 # → repo list with currentHash / latestHash for each dictionary
 ```
 
@@ -75,7 +75,7 @@ Repo paths on EC2:
 
 ## Updating dictionaries via the UI
 
-1. Open https://ido-tradukilo.pages.dev
+1. Open https://tradukilo.lipu.dev
 2. Click **Dictionaries**
 3. For any repo showing "Needs pull": click **Pull Updates**
 4. Then click **Build & Install**

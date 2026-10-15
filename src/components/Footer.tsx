@@ -3,8 +3,8 @@ import { Info } from 'lucide-react'
 
 // Sibling projects shown in the footer. Edit this list to add/remove a link.
 const PROJECTS = [
-  { name: 'Vortaro', url: 'https://ido-vortaro.pages.dev/', code: 'https://github.com/komapc/vortaro' },
-  { name: 'Tradukilo', url: 'https://ido-tradukilo.pages.dev/', code: 'https://github.com/komapc/ido-epo-translator' },
+  { name: 'Vortaro', url: 'https://vortaro.lipu.dev/', code: 'https://github.com/komapc/vortaro' },
+  { name: 'Tradukilo', url: 'https://tradukilo.lipu.dev/', code: 'https://github.com/komapc/ido-epo-translator' },
   { name: 'EchoDrift', url: 'https://echodrift.pages.dev/', code: 'https://github.com/komapc/phonomorph' },
   { name: 'Hanzi-burst', url: 'https://hanzi-burst.komapc.workers.dev/', code: 'https://github.com/komapc/hanzi-burst' },
   { name: 'Ideonology', url: 'https://komapc.github.io/ideon/en/', code: 'https://github.com/komapc/ideon' },

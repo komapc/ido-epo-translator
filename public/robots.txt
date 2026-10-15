@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ido-tradukilo.pages.dev/sitemap.xml
+Sitemap: https://tradukilo.lipu.dev/sitemap.xml

@@ -5,6 +5,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url)
 
+    // Old *.pages.dev address: permanent redirect to the canonical domain.
+    if (url.hostname === 'ido-tradukilo.pages.dev') {
+      return Response.redirect('https://tradukilo.lipu.dev' + url.pathname + url.search, 301)
+    }
+
     // Yandex Webmaster verification: must serve at this exact .html path with
     // a 200, not the 308 Cloudflare Pages issues for .html extensions by default.
     if (url.pathname === '/yandex_fe73d9bf92172294.html') {
@@ -453,7 +458,7 @@ export default {
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Tradukilo", "item": "https://ido-tradukilo.pages.dev/" },
+            { "@type": "ListItem", "position": 1, "name": "Tradukilo", "item": "https://tradukilo.lipu.dev/" },
             { "@type": "ListItem", "position": 2, "name": safeQ, "item": url.href }
           ]
         }]

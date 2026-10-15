@@ -31,7 +31,7 @@ const App = () => {
         <header className="text-center mb-8 relative">
           <div className="absolute right-0 top-0 flex gap-2">
              <a 
-              href="https://ido-vortaro.pages.dev" 
+              href="https://vortaro.lipu.dev" 
               className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
             >
               <Book className="w-4 h-4" />

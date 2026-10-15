@@ -30,7 +30,7 @@ const SeoContent = () => (
     <p className="mb-4">
       To look up one word with its part of speech, related words and browsing by letter, use
       the companion{' '}
-      <a className="underline" href="https://ido-vortaro.pages.dev/">
+      <a className="underline" href="https://vortaro.lipu.dev/">
         Ido–Esperanto dictionary (Vortaro)
       </a>
       , which contains more than 37,000 entries built from the same data this translator uses.

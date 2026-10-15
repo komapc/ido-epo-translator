@@ -2,7 +2,7 @@
 
 Machine translation between Ido and Esperanto, powered by [Apertium](https://apertium.org).
 
-**Live:** https://ido-tradukilo.pages.dev
+**Live:** https://tradukilo.lipu.dev
 **Operations guide:** [RUNBOOK.md](RUNBOOK.md)
 
 ## Architecture
@@ -44,7 +44,7 @@ API routes in dev mode fall back to `http://127.0.0.1:2737` (APy) and `http://12
 CI deploys automatically on push to `main` via `.github/workflows/deploy-worker.yml`:
 
 ```
-npm run build  →  wrangler pages deploy dist  →  ido-tradukilo.pages.dev
+npm run build  →  wrangler pages deploy dist  →  tradukilo.lipu.dev (Pages project ido-tradukilo)
 ```
 
 The build copies `_worker.js` into `dist/` (`postbuild` step) so Cloudflare Pages picks it up.

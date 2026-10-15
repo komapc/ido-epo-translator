@@ -106,7 +106,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         // Pull the published vortaro dictionary metadata directly from
         // the static-hosted Cloudflare Pages deploy. Contains source_stats.
         try {
-            const res = await fetch('https://ido-vortaro.pages.dev/dictionary.json', {
+            const res = await fetch('https://vortaro.lipu.dev/dictionary.json', {
                 cache: 'no-cache',
             })
             if (!res.ok) return

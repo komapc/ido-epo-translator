@@ -65,4 +65,4 @@ $SSH "$EC2_HOST" "
 "
 
 echo ""
-echo "Done. Check https://ido-tradukilo.pages.dev/api/health to confirm."
+echo "Done. Check https://tradukilo.lipu.dev/api/health to confirm."
