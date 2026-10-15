@@ -22,21 +22,24 @@ const Footer = ({ lang }: FooterProps) => {
       resources: 'Resursi',
       contact: 'Kontakto',
       about: 'Pri la projekto',
-      code: 'kodo'
+      code: 'kodo',
+      report: 'Raportar eroro'
     },
     en: {
       projects: 'My projects',
       resources: 'Resources',
       contact: 'Contact',
       about: 'About the project',
-      code: 'code'
+      code: 'code',
+      report: 'Report a translation error'
     },
     eo: {
       projects: 'Miaj projektoj',
       resources: 'Rimedoj',
       contact: 'Kontakto',
       about: 'Pri la projekto',
-      code: 'kodo'
+      code: 'kodo',
+      report: 'Raporti tradukeraron'
     }
   }
 
@@ -64,6 +67,16 @@ const Footer = ({ lang }: FooterProps) => {
           <span className="opacity-30">·</span>
           <span>{t.contact}: <a href="mailto:komapc@gmail.com" className="text-white font-semibold hover:text-white transition-colors">komapc@gmail.com</a></span>
           
+          <span className="opacity-30">·</span>
+          <a
+            href="https://github.com/komapc/apertium-ido-epo/issues/new?labels=translation&title=Translation%20error%3A%20"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white font-semibold hover:text-white transition-colors"
+          >
+            {t.report}
+          </a>
+
           <span className="opacity-30">·</span>
           <a
             href={`/about-${lang}`}
