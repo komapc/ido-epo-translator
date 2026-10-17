@@ -59,6 +59,8 @@
       gtag('config', 'G-X1T3T62ZLR');
     </script>
     <title>Free Ido–Esperanto Translator | Apertium Machine Translation</title>
+    <!-- Static fallback nav stays in the DOM for crawlers but takes no space: React replaces it on mount, and a visible fallback caused a big layout shift (CLS). -->
+    <style>#root>nav:only-child{position:absolute;left:-9999px}</style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1f3f7a">
     <script>
