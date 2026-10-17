@@ -50,6 +50,8 @@ const Footer = ({ lang }: FooterProps) => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-3">
           <span className="opacity-80">{t.projects}:</span>
+          <a href="https://lipu.dev/" className="text-white font-semibold hover:text-white transition-colors">lipu.dev</a>
+          <span className="opacity-30">·</span>
           {PROJECTS.map((p, i) => (
             <Fragment key={p.url}>
               {i > 0 && <span className="opacity-30">·</span>}
