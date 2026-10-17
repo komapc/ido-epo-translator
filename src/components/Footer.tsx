@@ -1,15 +1,4 @@
-import { Fragment } from 'react'
 import { Info } from 'lucide-react'
-
-// Sibling projects shown in the footer. Edit this list to add/remove a link.
-const PROJECTS = [
-  { name: 'Vortaro', url: 'https://vortaro.lipu.dev/', code: 'https://github.com/komapc/vortaro' },
-  { name: 'Tradukilo', url: 'https://tradukilo.lipu.dev/', code: 'https://github.com/komapc/ido-epo-translator' },
-  { name: 'EchoDrift', url: 'https://echodrift.lipu.dev/', code: 'https://github.com/komapc/phonomorph' },
-  { name: 'Hanzi-burst', url: 'https://hanzi.lipu.dev/', code: 'https://github.com/komapc/hanzi-burst' },
-  { name: 'Ideonology', url: 'https://ideon.lipu.dev/en/', code: 'https://github.com/komapc/ideon' },
-  { name: 'min-co', url: 'https://minco.lipu.dev/', code: 'https://github.com/komapc/contlang' },
-]
 
 interface FooterProps {
   lang: 'io' | 'en' | 'eo'
@@ -49,16 +38,11 @@ const Footer = ({ lang }: FooterProps) => {
     <footer className="mt-16 pt-10 pb-10 border-t border-white/10 text-white/70 text-center text-sm">
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-3">
-          <span className="opacity-80">{t.projects}:</span>
           <a href="https://lipu.dev/" className="text-white font-semibold hover:text-white transition-colors">lipu.dev</a>
           <span className="opacity-30">·</span>
-          {PROJECTS.map((p, i) => (
-            <Fragment key={p.url}>
-              {i > 0 && <span className="opacity-30">·</span>}
-              <a href={p.url} className="text-white font-semibold hover:text-white transition-colors">{p.name}</a>
-              <span className="text-xs opacity-50 -ml-2">(<a href={p.code} target="_blank" rel="noopener noreferrer" className="hover:underline">{t.code}</a>)</span>
-            </Fragment>
-          ))}
+          <a href="https://vortaro.lipu.dev/" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a>
+          <span className="opacity-30">·</span>
+          <a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">{t.code}</a>
         </div>
         
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
