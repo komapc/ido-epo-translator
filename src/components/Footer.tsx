@@ -6,7 +6,7 @@ const PROJECTS = [
   { name: 'Vortaro', url: 'https://vortaro.lipu.dev/', code: 'https://github.com/komapc/vortaro' },
   { name: 'Tradukilo', url: 'https://tradukilo.lipu.dev/', code: 'https://github.com/komapc/ido-epo-translator' },
   { name: 'EchoDrift', url: 'https://echodrift.lipu.dev/', code: 'https://github.com/komapc/phonomorph' },
-  { name: 'Hanzi-burst', url: 'https://hanzi-burst.komapc.workers.dev/', code: 'https://github.com/komapc/hanzi-burst' },
+  { name: 'Hanzi-burst', url: 'https://hanzi.lipu.dev/', code: 'https://github.com/komapc/hanzi-burst' },
   { name: 'Ideonology', url: 'https://ideon.lipu.dev/en/', code: 'https://github.com/komapc/ideon' },
   { name: 'min-co', url: 'https://minco.lipu.dev/', code: 'https://github.com/komapc/contlang' },
 ]
