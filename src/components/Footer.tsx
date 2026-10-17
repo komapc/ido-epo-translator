@@ -65,7 +65,7 @@ const Footer = ({ lang }: FooterProps) => {
           <span className="text-xs opacity-50 -ml-3">(Apertium-based)</span>
           
           <span className="opacity-30">·</span>
-          <span>{t.contact}: <a href="mailto:komapc@gmail.com" className="text-white font-semibold hover:text-white transition-colors">komapc@gmail.com</a></span>
+          <span>{t.contact}: <a href="https://github.com/komapc" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">GitHub</a></span>
           
           <span className="opacity-30">·</span>
           <a
