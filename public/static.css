@@ -1,0 +1,25 @@
+/* Shared style for the static pages (about-*, ido-epo, epo-ido).
+   Mirrors the app: blue→green gradient (#1f3f7a → #1f7a3a), white text, translucent cards. */
+:root { color-scheme: dark; }
+html { background: #1f3f7a; }
+body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; box-sizing: border-box;
+    color: rgba(255, 255, 255, .9);
+    background: linear-gradient(to bottom right, #1f3f7a, #1f3f7a, #1f7a3a) fixed;
+}
+.card { background: rgba(255, 255, 255, .1); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border-radius: 12px; padding: 30px; }
+h1, h2 { color: #fff; }
+a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: #cfeedb; }
+li { margin-bottom: 8px; }
+.lang-switcher { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; }
+.lang-btn { text-decoration: none; padding: 5px 15px; border-radius: 8px; background: rgba(255, 255, 255, .1); color: #fff; transition: background .2s; }
+.lang-btn:hover { background: rgba(255, 255, 255, .2); color: #fff; }
+.lang-btn.active { background: #1f7a3a; }
+.back { display: inline-block; margin-top: 20px; font-weight: bold; text-decoration: none; }
+table { border-collapse: collapse; width: 100%; }
+td, th { border: 1px solid rgba(255, 255, 255, .25); padding: 8px 10px; text-align: left; }
+th { background: rgba(255, 255, 255, .12); }
+.cta { display: inline-block; margin: 12px 0; padding: 10px 18px; background: #1f7a3a; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background .2s; }
+.cta:hover { background: #1a6a33; color: #fff; }
