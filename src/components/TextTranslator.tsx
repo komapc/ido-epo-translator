@@ -121,6 +121,11 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       // Persist to history (only when we got a non-error response)
       if (data.translation) {
         addEntry({ direction, input: inputText, output: translation })
+        // GA4 (only live after consent): direction and size, never the text itself
+        ;(window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'translate', {
+          direction,
+          chars: inputText.length,
+        })
       }
     } catch (error) {
       console.error('Translation error:', error)
