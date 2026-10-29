@@ -1,6 +1,16 @@
 // Always-visible, crawlable explanation of what this tool is. The About panel
 // is hidden behind a toggle and the rest of the UI is an interactive widget, so
-// without this the page carries almost no indexable text.
+// without this the page carries almost no indexable text. It is also
+// prerendered into the static index.html (scripts/prerender.mjs).
+
+// Real translator output; keep in sync with what the engine actually returns.
+const EXAMPLES: [string, string][] = [
+  ['Me amas vu.', 'Mi amas vin.'],
+  ['La hundo manjas la pomo.', 'La hundo manĝas la pomon.'],
+  ['Ube esas la biblioteko?', 'Kie estas la biblioteko?'],
+  ['Ni iros a la urbo morge.', 'Ni iros al la urbo morgaŭ.'],
+]
+
 const SeoContent = () => (
   <section
     className="max-w-3xl mx-auto mt-16 text-white/85 leading-relaxed"
@@ -19,14 +29,37 @@ const SeoContent = () => (
       entry.
     </p>
 
-    <h3 className="text-xl font-semibold text-white mb-2">How to use it</h3>
+    <h2 className="text-xl font-semibold text-white mb-2">Example translations</h2>
+    <table className="w-full mb-2 border-collapse text-left">
+      <thead>
+        <tr>
+          <th className="border border-white/25 bg-white/10 px-3 py-2">Ido</th>
+          <th className="border border-white/25 bg-white/10 px-3 py-2">Esperanto</th>
+        </tr>
+      </thead>
+      <tbody>
+        {EXAMPLES.map(([io, eo]) => (
+          <tr key={io}>
+            <td lang="io" className="border border-white/25 px-3 py-2">{io}</td>
+            <td lang="eo" className="border border-white/25 px-3 py-2">{eo}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p className="mb-4 text-sm">
+      More examples for each direction:{' '}
+      <a className="underline" href="/ido-epo">Ido → Esperanto</a> ·{' '}
+      <a className="underline" href="/epo-ido">Esperanto → Ido</a>.
+    </p>
+
+    <h2 className="text-xl font-semibold text-white mb-2">How to use it</h2>
     <ol className="list-decimal list-inside mb-4 space-y-1">
       <li>Pick the direction with the swap button: Ido → Esperanto or Esperanto → Ido.</li>
       <li>Type or paste your text into the input box.</li>
       <li>The translation appears next to it.</li>
     </ol>
 
-    <h3 className="text-xl font-semibold text-white mb-2">Single words and dictionary</h3>
+    <h2 className="text-xl font-semibold text-white mb-2">Single words and dictionary</h2>
     <p className="mb-4">
       To look up one word with its part of speech, related words and browsing by letter, use
       the companion{' '}
@@ -36,7 +69,7 @@ const SeoContent = () => (
       , which contains more than 37,000 entries built from the same data this translator uses.
     </p>
 
-    <h3 className="text-xl font-semibold text-white mb-2">About Ido</h3>
+    <h2 className="text-xl font-semibold text-white mb-2">About Ido</h2>
     <p className="mb-4">
       Ido is a constructed language published in 1907 as a reform of Esperanto, with a
       regular grammar and a vocabulary drawn from Romance and Germanic languages. Ido and
@@ -45,7 +78,7 @@ const SeoContent = () => (
       dictionary and transfer rules.
     </p>
 
-    <h3 className="text-xl font-semibold text-white mb-2">Questions</h3>
+    <h2 className="text-xl font-semibold text-white mb-2">Questions</h2>
     <dl className="mb-4 space-y-3">
       <div>
         <dt className="font-semibold text-white">Is the translator free?</dt>
