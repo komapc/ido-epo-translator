@@ -474,8 +474,8 @@ export default {
         html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bname=["']description["'][^>]*>/i, `<meta name="description" content="${description}">`)
         html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${title}">`)
         html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${description}">`)
-        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']twitter:title["'][^>]*>/i, `<meta property="twitter:title" content="${title}">`)
-        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bproperty=["']twitter:description["'][^>]*>/i, `<meta property="twitter:description" content="${description}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bname=["']twitter:title["'][^>]*>/i, `<meta name="twitter:title" content="${title}">`)
+        html = replaceOrInsertMetaTag(html, /<meta\b[^>]*\bname=["']twitter:description["'][^>]*>/i, `<meta name="twitter:description" content="${description}">`)
 
         // The per-page breadcrumb JSON-LD has no static equivalent in
         // index.html (which only has an unrelated SoftwareApplication
@@ -488,7 +488,7 @@ export default {
         if (safeT) {
           const noscriptBlock = `<noscript><div id="ssr-translation"><h2>${safeQ} → ${safeT}</h2>`
             + `<p>${langFrom} to ${langTo} translation of "${safeQ}": ${safeT}. Free Ido-Esperanto machine translation.</p></div></noscript>`
-          html = html.replace('<div id="root"></div>', `<div id="root"></div>${noscriptBlock}`)
+          html = html.replace('</body>', `${noscriptBlock}\n  </body>`)
         }
 
         return new Response(html, {
@@ -496,11 +496,16 @@ export default {
         })
       }
       
-      if (!response.ok && !url.pathname.includes('.')) {
-        const indexRequest = new Request(new URL('/index.html', request.url), request)
-        return await env.ASSETS.fetch(indexRequest)
+      // The app has a single route (/); everything else is a real file or a
+      // static page. dist/404.html makes the asset server answer unknown
+      // paths with a real 404 instead of index.html with 200 (a soft 404).
+      // That 404 can arrive with an empty body, so serve the 404 page's
+      // content explicitly, keeping the 404 status.
+      if (response.status === 404) {
+        const page = await env.ASSETS.fetch(new Request(new URL('/404', request.url), request))
+        if (page.ok) return new Response(page.body, { status: 404, headers: page.headers })
       }
-      
+
       return response
     } catch (_) {
       try {

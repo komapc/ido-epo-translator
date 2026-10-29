@@ -12,7 +12,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="AupDKKNBCGrm9DC7wPutgANwT0WQDpQMqqky5eqiERk" />
-    <meta name="description" content="Free online Ido–Esperanto translator powered by Apertium. Fast, accurate two-way machine translation between Ido and Esperanto — international auxiliary languages. Tradukilo inter Ido ed Esperanto.">
+    <meta name="description" content="Free online Ido–Esperanto translator powered by Apertium: fast two-way machine translation between Ido and Esperanto. Tradukilo inter Ido ed Esperanto.">
     <meta name="keywords" content="Ido, Esperanto, translator, translation, tradukilo, Apertium, machine translation, auxlang, Ido language, Ido translator, constructed language, planned language, conlang translator, international auxiliary language, Ido to Esperanto, Esperanto to Ido, online translator, free translator, two-way translator, auxlang translation, Ido text translator">
     <meta name="author" content="komapc">
 
@@ -24,11 +24,11 @@
     <meta property="og:image" content="https://tradukilo.lipu.dev/og-image.png">
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://tradukilo.lipu.dev/">
-    <meta property="twitter:title" content="Free Ido–Esperanto Translator | Apertium Machine Translation">
-    <meta property="twitter:description" content="Free two-way machine translation between Ido and Esperanto — international auxiliary languages. Powered by Apertium.">
-    <meta property="twitter:image" content="https://tradukilo.lipu.dev/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://tradukilo.lipu.dev/">
+    <meta name="twitter:title" content="Free Ido–Esperanto Translator | Apertium Machine Translation">
+    <meta name="twitter:description" content="Free two-way machine translation between Ido and Esperanto — international auxiliary languages. Powered by Apertium.">
+    <meta name="twitter:image" content="https://tradukilo.lipu.dev/og-image.png">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://tradukilo.lipu.dev/">
@@ -53,8 +53,6 @@
     <script>window.gtag=function(){};</script>
     <script defer src="/consent.js" data-ga="G-X1T3T62ZLR"></script>
     <title>Free Ido–Esperanto Translator | Apertium Machine Translation</title>
-    <!-- Static fallback nav stays in the DOM for crawlers but takes no space: React replaces it on mount, and a visible fallback caused a big layout shift (CLS). -->
-    <style>#root>nav:only-child{position:absolute;left:-9999px}</style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1f3f7a">
     <script>
@@ -66,15 +64,8 @@
     </script>
   </head>
   <body>
-    <!-- Static fallback links for crawlers/no-JS; React replaces the contents of #root on mount. -->
-    <div id="root"><nav><a href="/about-io">Pri la tradukilo</a> · <a href="/about-en">About</a> · <a href="/about-eo">Pri la tradukilo (eo)</a> · <a href="/ido-epo">Ido → Esperanto</a> · <a href="/epo-ido">Esperanto → Ido</a></nav></div>
-    <noscript>
-      <h1>Free Ido–Esperanto Translator</h1>
-      <p>Free two-way machine translation between Ido and Esperanto, two international
-        auxiliary languages, powered by the open-source Apertium engine. Translate text
-        from Ido to Esperanto and from Esperanto to Ido instantly. Tradukilo inter Ido ed
-        Esperanto — senpaga, rapida, ed exakta.</p>
-    </noscript>
+    <!-- scripts/prerender.mjs replaces the marker with the prerendered app at build time; createRoot replaces it again on mount. -->
+    <div id="root"><!--app-html--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
