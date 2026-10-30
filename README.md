@@ -78,6 +78,7 @@ src/                              React frontend
     RepoVersions.tsx              Footer version display
     Footer.tsx
 public/                           Static assets copied to dist/
+  yandex_f2140f420535e2c3.html    Yandex Webmaster verification (tradukilo.lipu.dev) — keep
 scripts/
   ec2-update.sh                   SSH helper: pull + rebuild a repo on EC2
 .github/workflows/
