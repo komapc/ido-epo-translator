@@ -19,7 +19,7 @@ export default {
       );
     }
 
-    const APY_SERVER_URL = (env.APY_SERVER_URL || 'http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com').replace(/\/$/, '')
+    const APY_SERVER_URL = (env.APY_SERVER_URL || 'https://apy.lipu.dev').replace(/\/$/, '')
     // Handle the case where Wrangler passes variables as string keys
     let VERSION = env.APP_VERSION || 'dev'
     if (!env.APP_VERSION) {

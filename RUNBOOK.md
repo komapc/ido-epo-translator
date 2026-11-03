@@ -158,7 +158,7 @@ The webhook server isn't reachable. Check:
 
 ```bash
 ssh ... "sudo systemctl status webhook-server"
-curl http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:8081/
+curl https://apy.lipu.dev/status   # 401 without the token means it is up
 ```
 
 Also verify `REBUILD_WEBHOOK_URL` is set correctly in Cloudflare Pages env vars.
@@ -213,8 +213,8 @@ If missing, check the `postbuild` script in `package.json`:
 
 | Variable | Purpose | Example value |
 |----------|---------|---------------|
-| `APY_SERVER_URL` | APy translation server | `http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:2737` |
-| `REBUILD_WEBHOOK_URL` | EC2 webhook base URL | `http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:8081/rebuild` |
+| `APY_SERVER_URL` | APy translation server | `https://apy.lipu.dev` |
+| `REBUILD_WEBHOOK_URL` | EC2 webhook base URL | `https://apy.lipu.dev/rebuild` |
 | `APP_VERSION` | Shown in health + footer | `1.0.1` |
 | `GITHUB_TOKEN` | (optional) Avoid GitHub rate limits on `/api/versions` | — |
 | `ADMIN_PASSWORD` | (secret) Required for `/api/admin/*`; unset = admin disabled | — |

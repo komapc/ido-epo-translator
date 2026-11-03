@@ -55,8 +55,8 @@ The build copies `_worker.js` into `dist/` (`postbuild` step) so Cloudflare Page
 
 | Variable | Value |
 |----------|-------|
-| `APY_SERVER_URL` | `http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:2737` |
-| `REBUILD_WEBHOOK_URL` | `http://ec2-52-211-137-158.eu-west-1.compute.amazonaws.com:8081/rebuild` |
+| `APY_SERVER_URL` | `https://apy.lipu.dev` |
+| `REBUILD_WEBHOOK_URL` | `https://apy.lipu.dev/rebuild` |
 | `APP_VERSION` | current version from `package.json` |
 
 ## Updating dictionaries
