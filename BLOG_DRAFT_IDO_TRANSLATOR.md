@@ -324,7 +324,7 @@ All this dictionary work produced a useful standalone tool: **[Vortaro](https://
 | Data sources | 5 (Wiktionary×3, Wikipedia, BERT, manual) |
 | Translation quality | Usable for basic-intermediate texts |
 
-**Live translator:** https://ido-epo-translator.pages.dev
+**Live translator:** https://tradukilo.lipu.dev
 
 ### What Works Well
 
@@ -389,7 +389,7 @@ If you're working with a low-resource language pair, consider Apertium. The lear
 
 | Resource | URL |
 |----------|-----|
-| **Live Translator** | https://ido-epo-translator.pages.dev |
+| **Live Translator** | https://tradukilo.lipu.dev |
 | **Dictionary (Vortaro)** | https://vortaro.lipu.dev/ |
 | **Apertium Pair (source)** | https://github.com/komapc/apertium-ido-epo |
 | **Extractor Pipeline** | https://github.com/komapc/ido-esperanto-extractor |

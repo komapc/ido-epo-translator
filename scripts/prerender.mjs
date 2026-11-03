@@ -13,8 +13,8 @@ const indexPath = path.join(root, 'dist', 'index.html')
 const MARKER = '<!--app-html-->'
 const DONE = '<!--prerendered-->'
 
-// `npm run build` triggers postbuild twice (npm's post-hook plus the explicit
-// call that build:pages also relies on); the second run has nothing to do.
+// `npm run build` can trigger postbuild twice (npm's post-hook plus an explicit
+// call); the second run has nothing to do.
 if (fs.readFileSync(indexPath, 'utf8').includes(DONE)) {
   console.log('prerender: dist/index.html already prerendered, skipping')
   process.exit(0)
