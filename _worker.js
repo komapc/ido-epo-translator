@@ -59,10 +59,12 @@ export default {
     // which would silently stop matching on preview/custom domains) rather
     // than leaving it and appending a second copy. Falls back to inserting
     // before </head> if no existing tag matches.
+    // The replacements hold the visitor's query: use functions, because a replacement
+    // string would treat $` and $& in it as patterns and can blow up the page's size.
     const replaceOrInsertMetaTag = (html, matchRegex, newTag) =>
       matchRegex.test(html)
-        ? html.replace(matchRegex, newTag)
-        : html.replace('</head>', `${newTag}\n  </head>`)
+        ? html.replace(matchRegex, () => newTag)
+        : html.replace('</head>', () => `${newTag}\n  </head>`)
 
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
@@ -481,14 +483,14 @@ export default {
         // index.html (which only has an unrelated SoftwareApplication
         // block), so it's always appended rather than replaced.
         const ldTags = ld.map((d) => `<script type="application/ld+json">${JSON.stringify(d)}</script>`).join('\n    ')
-        html = html.replace('</head>', `    ${ldTags}\n  </head>`)
+        html = html.replace('</head>', () => `    ${ldTags}\n  </head>`)
 
         // Crawler-visible result, outside React's #root (React never wipes it),
         // so the query page has real content without affecting the JS UI.
         if (safeT) {
           const noscriptBlock = `<noscript><div id="ssr-translation"><h2>${safeQ} → ${safeT}</h2>`
             + `<p>${langFrom} to ${langTo} translation of "${safeQ}": ${safeT}. Free Ido-Esperanto machine translation.</p></div></noscript>`
-          html = html.replace('</body>', `${noscriptBlock}\n  </body>`)
+          html = html.replace('</body>', () => `${noscriptBlock}\n  </body>`)
         }
 
         return new Response(html, {
