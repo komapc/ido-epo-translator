@@ -98,6 +98,31 @@ export default {
         }
       }
 
+      // The webhook answers build/rebuild immediately; waiting longer means it is down.
+      const WEBHOOK_START_TIMEOUT_MS = 15000
+      const webhookErrorText = (text) => {
+        try { return JSON.parse(text)?.error || null } catch { return null }
+      }
+      const webhookBusy = (text) => sendJson(409, { error: webhookErrorText(text) || 'Another operation is in progress' })
+
+      if (request.method === 'GET' && subpath === '/admin/operation') {
+        try {
+          if (!env.REBUILD_WEBHOOK_URL) {
+            return sendJson(500, { error: 'Rebuild webhook URL not configured' })
+          }
+          const webhookRes = await fetch(env.REBUILD_WEBHOOK_URL.replace('/rebuild', '/operation'), {
+            headers: { 'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '' },
+            signal: AbortSignal.timeout(5000),
+          })
+          if (!webhookRes.ok) {
+            return sendJson(502, { error: 'Failed to fetch build progress', webhookStatus: webhookRes.status })
+          }
+          return sendJson(200, await webhookRes.json())
+        } catch (e) {
+          return sendJson(500, { error: 'Build progress check failed', details: e?.message })
+        }
+      }
+
       if (request.method === 'GET' && subpath === '/health') {
         return sendJson(200, { status: 'ok', version: VERSION, timestamp: new Date().toISOString() })
       }
@@ -316,10 +341,11 @@ export default {
             body: JSON.stringify({ repo, trigger: 'web-ui' }),
           })
           const text = await webhookRes.text().catch(() => '')
+          if (webhookRes.status === 409) return webhookBusy(text)
           if (!webhookRes.ok) {
             return sendJson(502, {
               error: 'Failed to trigger repository pull',
-              details: `Webhook returned ${webhookRes.status}`,
+              details: webhookErrorText(text) || `Webhook returned ${webhookRes.status}`,
               body: text?.slice(0, 2000),
             })
           }
@@ -351,8 +377,10 @@ export default {
               'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '',
             },
             body: JSON.stringify({ repo, trigger: 'web-ui' }),
+            signal: AbortSignal.timeout(WEBHOOK_START_TIMEOUT_MS),
           })
           const text = await webhookRes.text().catch(() => '')
+          if (webhookRes.status === 409) return webhookBusy(text)
 
           // Try to extract structured error information from the webhook response
           let parsedError = null
@@ -397,8 +425,10 @@ export default {
               'X-Rebuild-Token': env.REBUILD_SHARED_SECRET || '',
             },
             body: JSON.stringify({ trigger: 'web-ui' }),
+            signal: AbortSignal.timeout(WEBHOOK_START_TIMEOUT_MS),
           })
           const text = await webhookRes.text().catch(() => '')
+          if (webhookRes.status === 409) return webhookBusy(text)
           if (!webhookRes.ok) {
             return sendJson(502, {
               error: 'Failed to trigger EC2 rebuild',
