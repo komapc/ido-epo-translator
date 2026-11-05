@@ -33,6 +33,13 @@ const tokenMatches = (token) => {
 // box, and a client timeout + retry would otherwise start a second one.
 let busyWith = null;
 
+// Builds outlast Cloudflare's request timeout, so /build-repo and /rebuild answer
+// 202 straight away and clients poll /operation. In memory on purpose: after a
+// webhook restart this is null, which clients report as "status lost".
+let lastOperation = null;
+const LOG_TAIL_LINES = 30;
+const logTail = (text) => (text || '').trim().split('\n').slice(-LOG_TAIL_LINES).join('\n');
+
 // Log helper
 const log = (message) => {
     const timestamp = new Date().toISOString();
@@ -191,8 +198,8 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // Accept POST for most endpoints, GET for /status
-    if (req.method !== 'POST' && !(req.method === 'GET' && req.url === '/status')) {
+    // Accept POST for most endpoints, GET for the read-only ones
+    if (req.method !== 'POST' && !(req.method === 'GET' && ['/status', '/operation'].includes(req.url))) {
         res.writeHead(405, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Method not allowed' }));
         return;
@@ -242,6 +249,26 @@ const server = http.createServer(async (req, res) => {
     });
 });
 
+// Answer 202 now and resolve only when the child exits, so the busy lock in the
+// caller is held for the whole build.
+const runInBackground = async (res, op, repo, run) => {
+    lastOperation = { op, repo, state: 'running', startedAt: new Date().toISOString() };
+    res.writeHead(202, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'accepted', repo, message: `${op} started` }));
+    try {
+        const result = await run();
+        lastOperation = { ...lastOperation, state: 'success', finishedAt: new Date().toISOString(), logTail: logTail(result.stdout) };
+    } catch (err) {
+        lastOperation = {
+            ...lastOperation,
+            state: 'failed',
+            finishedAt: new Date().toISOString(),
+            error: err.error || `Exit code ${err.code}`,
+            logTail: logTail(`${err.stdout || ''}\n${err.stderr || ''}`),
+        };
+    }
+};
+
 const handleRoute = async (req, res, body) => {
     let requestData = {};
     try {
@@ -253,23 +280,7 @@ const handleRoute = async (req, res, body) => {
     // Route handling
     if (req.url === '/rebuild') {
         // Full rebuild
-        try {
-            const result = await executeRebuild();
-            res.writeHead(202, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                status: 'accepted',
-                message: 'Rebuild completed successfully',
-                log: result.stdout.split('\n').slice(-20).join('\n')
-            }));
-        } catch (err) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                status: 'error',
-                message: 'Rebuild failed',
-                error: err.error || 'Unknown error',
-                log: (err.stderr || err.stdout || '').split('\n').slice(-20).join('\n')
-            }));
-        }
+        await runInBackground(res, 'rebuild', null, executeRebuild);
     } else if (req.url === '/pull-repo') {
         // Pull specific repository
         const repo = requestData.repo;
@@ -308,25 +319,10 @@ const handleRoute = async (req, res, body) => {
             return;
         }
 
-        try {
-            const result = await executeBuild(repo);
-            res.writeHead(202, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                status: 'accepted',
-                repo,
-                message: 'Build completed successfully',
-                log: result.stdout.split('\n').slice(-10).join('\n')
-            }));
-        } catch (err) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                status: 'error',
-                repo,
-                message: 'Build failed',
-                error: err.error || 'Unknown error',
-                log: (err.stderr || err.stdout || '').split('\n').slice(-10).join('\n')
-            }));
-        }
+        await runInBackground(res, 'build', repo, () => executeBuild(repo));
+    } else if (req.url === '/operation') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ busy: !!busyWith, operation: lastOperation }));
     } else if (req.url === '/status') {
         // Get current status of all repositories
         try {

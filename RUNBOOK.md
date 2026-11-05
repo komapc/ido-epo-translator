@@ -82,6 +82,10 @@ Repo paths on EC2:
 
 The webhook server on EC2 handles these requests and restarts APy automatically.
 
+**Build & Install** and `POST /api/admin/rebuild` return 202 as soon as the job has *started*, not when it finishes. Follow it with `GET /api/admin/operation` (admin bearer), whose `operation.state` is `running`, `success` or `failed` (with `error` and `logTail`). `operation: null` means the webhook restarted and the result is lost.
+
+`webhook-server-no-docker.js` is not deployed by CI: copy it to `/opt/webhook-server.js` and restart `webhook-server`. Do that **before** merging worker/UI changes that depend on it; the old webhook answers `/operation` with 405.
+
 ---
 
 ## Deployment
