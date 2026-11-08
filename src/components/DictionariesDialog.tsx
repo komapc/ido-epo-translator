@@ -29,6 +29,7 @@ interface RepoStatus {
     buildStatus: RepoOperation
     pullMessage?: string
     buildMessage?: string
+    buildLog?: string
 }
 
 interface VortaroStats {
@@ -40,9 +41,14 @@ interface VortaroStats {
 
 const ADMIN_TOKEN_KEY = 'adminToken'
 
+const BUILD_POLL_MS = 5000
+const BUILD_POLL_LIMIT_MS = 45 * 60 * 1000
+// The box swaps hard during a build, so a few failed polls prove nothing.
+const BUILD_POLL_MAX_FAILURES = 12
+
 // Admin routes require the ADMIN_PASSWORD configured on the Pages project.
 // Ask once per tab; forget it if the worker rejects it.
-const adminFetch = async (path: string, body: unknown): Promise<Response> => {
+const adminFetch = async (path: string, body?: unknown): Promise<Response> => {
     let token = ''
     try { token = sessionStorage.getItem(ADMIN_TOKEN_KEY) || '' } catch { }
     if (!token) {
@@ -50,15 +56,40 @@ const adminFetch = async (path: string, body: unknown): Promise<Response> => {
         if (!token) throw new Error('Admin password required')
         try { sessionStorage.setItem(ADMIN_TOKEN_KEY, token) } catch { }
     }
-    const res = await fetch(path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(body)
-    })
+    const res = await fetch(path, body === undefined
+        ? { headers: { 'Authorization': `Bearer ${token}` } }
+        : {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(body)
+        })
     if (res.status === 401) {
         try { sessionStorage.removeItem(ADMIN_TOKEN_KEY) } catch { }
     }
     return res
+}
+
+// Cloudflare timeouts and other gateway failures come back as HTML, not JSON.
+const readJson = async (res: Response): Promise<any> => {
+    const text = await res.text()
+    try {
+        return JSON.parse(text)
+    } catch {
+        throw new Error(`Server returned HTTP ${res.status} with a non-JSON response`)
+    }
+}
+
+const describeFailure = (res: Response, data: any, fallback: string): string => {
+    if (res.status === 401) return 'Wrong admin password'
+    const main = data?.webhookError || data?.error || fallback
+    const extra = data?.hint || data?.details
+    return extra ? `${main}: ${extra}` : main
+}
+
+const describeException = (error: unknown): string => {
+    // fetch() rejects with a TypeError only when no response arrived at all.
+    if (error instanceof TypeError) return 'Network error: could not reach the server'
+    return error instanceof Error ? error.message : 'Unexpected error'
 }
 
 const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
@@ -67,33 +98,21 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
     const [repoStatuses, setRepoStatuses] = useState<Record<string, RepoStatus>>({})
     const [vortaroStats, setVortaroStats] = useState<VortaroStats | null>(null)
     const dialogRef = useRef<HTMLDivElement>(null)
+    const mountedRef = useRef(true)
+
+    useEffect(() => {
+        mountedRef.current = true
+        return () => { mountedRef.current = false }
+    }, [])
 
     const fetchRepos = async () => {
         setLoading(true)
         try {
-            const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || ''
-            const res = await fetch(`${webhookUrl}/api/versions`)
+            const res = await fetch('/api/versions')
             const data = await res.json()
 
             if (Array.isArray(data?.repos)) {
-                const enhancedRepos = data.repos.map((repo: any) => ({
-                    ...repo,
-                    needsPull: repo.currentHash !== repo.latestHash,
-                    needsBuild: repo.lastBuiltHash !== repo.currentHash,
-                    isUpToDate: repo.currentHash === repo.latestHash && repo.lastBuiltHash === repo.currentHash,
-                    githubUrl: `https://github.com/${repo.owner}/${repo.repo}`
-                }))
-                setRepos(enhancedRepos)
-
-                // Initialize status for each repo
-                const initialStatuses: Record<string, RepoStatus> = {}
-                enhancedRepos.forEach((repo: RepoInfo) => {
-                    initialStatuses[repo.label] = {
-                        pullStatus: 'idle',
-                        buildStatus: 'idle'
-                    }
-                })
-                setRepoStatuses(initialStatuses)
+                setRepos(data.repos)
             }
         } catch (error) {
             console.error('Failed to fetch repositories:', error)
@@ -163,7 +182,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
         try {
             const res = await adminFetch('/api/admin/pull-repo', { repo: repoLabel })
 
-            const data = await res.json()
+            const data = await readJson(res)
 
             if (res.ok && data.status === 'success') {
                 setRepoStatuses(prev => ({
@@ -185,7 +204,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                     [repoLabel]: {
                         ...prev[repoLabel],
                         pullStatus: 'error',
-                        pullMessage: data.error || 'Pull failed'
+                        pullMessage: describeFailure(res, data, 'Pull failed')
                     }
                 }))
             }
@@ -195,54 +214,71 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                 [repoLabel]: {
                     ...prev[repoLabel],
                     pullStatus: 'error',
-                    pullMessage: 'Network error during pull'
+                    pullMessage: describeException(error)
                 }
             }))
         }
     }
 
-    const handleBuild = async (repoLabel: string) => {
+    const setBuildStatus = (repoLabel: string, buildStatus: RepoOperation, buildMessage: string, buildLog?: string) => {
         setRepoStatuses(prev => ({
             ...prev,
-            [repoLabel]: { ...prev[repoLabel], buildStatus: 'building', buildMessage: 'Building and installing...' }
+            [repoLabel]: { ...prev[repoLabel], buildStatus, buildMessage, buildLog }
         }))
+    }
+
+    const waitForBuild = async (repoLabel: string) => {
+        const deadline = Date.now() + BUILD_POLL_LIMIT_MS
+        let failures = 0
+        while (mountedRef.current && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, BUILD_POLL_MS))
+            let data
+            try {
+                const res = await adminFetch('/api/admin/operation')
+                data = await readJson(res)
+                if (!res.ok) throw new Error(describeFailure(res, data, 'Progress check failed'))
+                failures = 0
+            } catch (error) {
+                failures += 1
+                if (failures >= BUILD_POLL_MAX_FAILURES) {
+                    setBuildStatus(repoLabel, 'error', `Lost contact with the server; the build may still be running. ${describeException(error)}`)
+                    return
+                }
+                continue
+            }
+            const operation = data.operation
+            if (operation?.op !== 'build' || operation.repo !== repoLabel) {
+                setBuildStatus(repoLabel, 'error', 'Build status lost; check the webhook log on the server')
+                return
+            }
+            if (operation.state === 'success') {
+                setBuildStatus(repoLabel, 'success', 'Build completed and APy restarted')
+                await fetchRepos()
+                return
+            }
+            if (operation.state === 'failed') {
+                setBuildStatus(repoLabel, 'error', `Build failed: ${operation.error}`, operation.logTail)
+                return
+            }
+        }
+        if (mountedRef.current) {
+            setBuildStatus(repoLabel, 'error', 'Gave up waiting; the build may still be running')
+        }
+    }
+
+    const handleBuild = async (repoLabel: string) => {
+        setBuildStatus(repoLabel, 'building', 'Building and installing; this can take several minutes...')
 
         try {
             const res = await adminFetch('/api/admin/build-repo', { repo: repoLabel })
-
-            const data = await res.json()
-
+            const data = await readJson(res)
             if (res.ok && data.status === 'accepted') {
-                setRepoStatuses(prev => ({
-                    ...prev,
-                    [repoLabel]: {
-                        ...prev[repoLabel],
-                        buildStatus: 'success',
-                        buildMessage: data.message || 'Build completed successfully'
-                    }
-                }))
-
-                // Refresh repo data after successful build
-                await fetchRepos()
+                await waitForBuild(repoLabel)
             } else {
-                setRepoStatuses(prev => ({
-                    ...prev,
-                    [repoLabel]: {
-                        ...prev[repoLabel],
-                        buildStatus: 'error',
-                        buildMessage: data.error || 'Build failed'
-                    }
-                }))
+                setBuildStatus(repoLabel, 'error', describeFailure(res, data, 'Build failed'))
             }
         } catch (error) {
-            setRepoStatuses(prev => ({
-                ...prev,
-                [repoLabel]: {
-                    ...prev[repoLabel],
-                    buildStatus: 'error',
-                    buildMessage: 'Network error during build'
-                }
-            }))
+            setBuildStatus(repoLabel, 'error', describeException(error))
         }
     }
 
@@ -389,10 +425,10 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                                             <div>
                                                 <span className="text-gray-400">Status:</span>
                                                 <div className={`text-sm font-medium ${repo.isUpToDate ? 'text-green-400' :
-                                                    repo.needsPull ? 'text-yellow-400' : 'text-orange-400'
+                                                    repo.needsPull ? 'text-yellow-400' : repo.needsBuild ? 'text-orange-400' : 'text-gray-400'
                                                     }`}>
                                                     {repo.isUpToDate ? 'Up to date' :
-                                                        repo.needsPull ? 'Needs pull' : 'Needs build'}
+                                                        repo.needsPull ? 'Needs pull' : repo.needsBuild ? 'Needs build' : 'Unknown'}
                                                 </div>
                                             </div>
                                         </div>
@@ -401,7 +437,7 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                                         <div className="flex gap-3">
                                             <button
                                                 onClick={() => handlePull(repo.label)}
-                                                disabled={status.pullStatus === 'pulling' || !repo.needsPull}
+                                                disabled={status.pullStatus === 'pulling' || (!!repo.latestHash && !repo.needsPull)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                                             >
                                                 {status.pullStatus === 'pulling' ? (
@@ -450,6 +486,11 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                                                             {status.buildMessage}
                                                         </span>
                                                     </div>
+                                                )}
+                                                {status.buildLog && (
+                                                    <pre className="text-xs text-gray-300 bg-black/30 rounded p-3 overflow-x-auto whitespace-pre-wrap">
+                                                        {status.buildLog}
+                                                    </pre>
                                                 )}
                                             </div>
                                         )}
