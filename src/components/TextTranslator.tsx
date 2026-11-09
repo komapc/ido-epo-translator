@@ -1,12 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Loader2, Copy, CheckCircle, Shuffle, Download, HelpCircle } from 'lucide-react'
 import HistoryPanel from './HistoryPanel'
 import { useTranslationHistory, type HistoryEntry } from '../hooks/useTranslationHistory'
 import { useNeuralTranslator, isNeuralModelCached } from '../neural/useNeuralTranslator'
 import { NEURAL_MODEL_MB } from '../neural/protocol'
+import CompareView, { type Vote } from './CompareView'
 
 type Engine = 'apertium' | 'neural'
+type Mode = Engine | 'both'
+type Direction = 'ido-epo' | 'epo-ido'
 const ENGINE_KEY = 'translator.engine'
+const MODES: readonly (readonly [Mode, string])[] = [['apertium', 'Apertium (rules)'], ['neural', 'Neural β'], ['both', 'Compare both']]
+const enginesFor = (m: Mode): Engine[] => (m === 'both' ? ['apertium', 'neural'] : [m])
+
+/** What the user last asked to translate. `nonce` changes on every Translate click. */
+interface TranslateRequest { input: string; direction: Direction; nonce: number }
+interface EngineResult extends TranslateRequest { text: string; ok: boolean }
+
+// A result answers a request when it is for the same text and direction. Successful
+// results are reused (so switching engines back and forth is instant); a failed one
+// only counts for the click that produced it, so clicking Translate again retries.
+const answers = (r: EngineResult | undefined, q: TranslateRequest | null): r is EngineResult =>
+  !!r && !!q && r.input === q.input && r.direction === q.direction && (r.ok || r.nonce === q.nonce)
+
+const gtag = (...a: unknown[]) => (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.(...a)
 
 interface TextTranslatorProps {
   direction: 'ido-epo' | 'epo-ido'
@@ -14,32 +31,42 @@ interface TextTranslatorProps {
 
 const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const [inputText, setInputText] = useState('')
-  const [outputText, setOutputText] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [request, setRequest] = useState<TranslateRequest | null>(null)
+  const [results, setResults] = useState<Partial<Record<Engine, EngineResult>>>({})
+  const [inflight, setInflight] = useState<Record<Engine, boolean>>({ apertium: false, neural: false })
+  const [vote, setVote] = useState<{ nonce: number; choice: Vote } | null>(null)
+  const nonce = useRef(0)
   const [isLoadingArticle, setIsLoadingArticle] = useState(false)
   const [showEngineHelp, setShowEngineHelp] = useState(false)
   const [copied, setCopied] = useState(false)
   const [useColorMode, setUseColorMode] = useState(true)
   const { history, addEntry, removeEntry, clearAll } = useTranslationHistory()
   // 'apertium' on first render so SSR markup and hydration match; the saved choice is applied after mount.
-  const [engine, setEngine] = useState<Engine>('apertium')
-  const [outputEngine, setOutputEngine] = useState<Engine>('apertium')
+  const [mode, setMode] = useState<Mode>('apertium')
   const neural = useNeuralTranslator()
 
   useEffect(() => {
     let saved: string | null = null
     try { saved = window.localStorage.getItem(ENGINE_KEY) } catch { /* storage disabled */ }
-    if (saved !== 'neural') return
-    setEngine('neural')
+    if (saved !== 'neural' && saved !== 'both') return
+    setMode(saved)
     // A returning visitor with the model already cached gets it loaded without asking again.
     isNeuralModelCached().then((cached) => { if (cached) neural.load() })
   }, [neural.load])
 
-  const chooseEngine = (e: Engine) => {
-    setEngine(e)
-    try { window.localStorage.setItem(ENGINE_KEY, e) } catch { /* storage disabled */ }
+  const chooseMode = (m: Mode) => {
+    setMode(m)
+    try { window.localStorage.setItem(ENGINE_KEY, m) } catch { /* storage disabled */ }
   }
-  const neuralBlocked = engine === 'neural' && neural.status !== 'ready'
+  const neuralReady = neural.status === 'ready'
+  const neuralBlocked = mode === 'neural' && !neuralReady
+  const busy = enginesFor(mode).some((e) => inflight[e])
+
+  // The current request, if it belongs to the direction on screen.
+  const current = request && request.direction === direction ? request : null
+  const shown = (e: Engine) => (answers(results[e], current) ? results[e] : undefined)
+  const outputEngine: Engine = mode === 'neural' ? 'neural' : 'apertium'
+  const outputText = mode === 'both' ? '' : shown(mode)?.text ?? ''
 
   // Replace exotic Unicode spaces with normal spaces; collapse runs of spaces (but preserve newlines)
   const normalizeDisplayWhitespace = (text: string): string => {
@@ -113,7 +140,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       const data = await res.json()
       const text = [data.title, data.extract].filter(Boolean).join('\n\n')
       setInputText(text)
-      setOutputText('')
+      setRequest(null)
     } catch (error) {
       console.error('Wikipedia fetch error:', error)
     } finally {
@@ -121,65 +148,66 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     }
   }
 
-  const handleTranslate = async () => {
-    if (!inputText.trim()) return
-
-    setIsLoading(true)
+  const translateWith = async (engine: Engine, q: TranslateRequest): Promise<{ text: string; ok: boolean }> => {
     if (engine === 'neural') {
       try {
-        const translation = await neural.translate(inputText, direction)
-        setOutputText(translation)
-        setOutputEngine('neural')
-        addEntry({ direction, input: inputText, output: translation })
-        ;(window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'translate', {
-          direction,
-          chars: inputText.length,
-          engine: 'neural',
-        })
+        return { text: await neural.translate(q.input, q.direction), ok: true }
       } catch (error) {
         console.error('Neural translation error:', error)
-        setOutputText('Error: neural translation failed')
-        setOutputEngine('neural')
-      } finally {
-        setIsLoading(false)
+        return { text: 'Error: neural translation failed', ok: false }
       }
-      return
     }
     try {
       // Use API endpoint (Cloudflare Worker for Pages, local for dev)
-      const apiUrl = import.meta.env.VITE_API_URL || '/api/translate'
-      const endpoint = apiUrl.startsWith('http') ? apiUrl : `${apiUrl}`
+      const endpoint = import.meta.env.VITE_API_URL || '/api/translate'
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: inputText,
-          direction: direction,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: q.input, direction: q.direction }),
       })
-
       const data = await response.json()
-      const translation = data.translation || 'Translation failed'
-      setOutputText(translation)
-      setOutputEngine('apertium')
-      // Persist to history (only when we got a non-error response)
-      if (data.translation) {
-        addEntry({ direction, input: inputText, output: translation })
-        // GA4 (only live after consent): direction and size, never the text itself
-        ;(window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'translate', {
-          direction,
-          chars: inputText.length,
-          engine: 'apertium',
-        })
-      }
+      return data.translation ? { text: data.translation, ok: true } : { text: 'Translation failed', ok: false }
     } catch (error) {
       console.error('Translation error:', error)
-      setOutputText('Error: Could not connect to translation service')
-    } finally {
-      setIsLoading(false)
+      return { text: 'Error: Could not connect to translation service', ok: false }
     }
+  }
+
+  const run = async (engine: Engine, q: TranslateRequest) => {
+    setInflight((f) => ({ ...f, [engine]: true }))
+    const { text, ok } = await translateWith(engine, q)
+    setResults((r) => ({ ...r, [engine]: { ...q, text, ok } }))
+    setInflight((f) => ({ ...f, [engine]: false }))
+    if (ok) {
+      addEntry({ direction: q.direction, input: q.input, output: text, engine })
+      // GA4 (only live after consent): direction, size and engine, never the text itself
+      gtag('event', 'translate', { direction: q.direction, chars: q.input.length, engine, mode })
+    }
+  }
+
+  // Run every engine the current mode shows that has no answer for the current
+  // request yet. This also covers switching engines after translating (the new
+  // engine translates the same text) and the neural model finishing its download
+  // while "Compare both" is waiting for it.
+  useEffect(() => {
+    if (!current) return
+    for (const e of enginesFor(mode)) {
+      if (inflight[e] || answers(results[e], current)) continue
+      if (e === 'neural' && !neuralReady) continue
+      run(e, current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, mode, neuralReady, inflight, results])
+
+  const handleTranslate = () => {
+    if (!inputText.trim()) return
+    setRequest({ input: inputText, direction, nonce: ++nonce.current })
+  }
+
+  const handleVote = (choice: Vote) => {
+    if (!current) return
+    setVote({ nonce: current.nonce, choice })
+    gtag('event', 'compare_vote', { direction, choice, chars: current.input.length })
   }
 
   const handleCopy = async () => {
@@ -189,12 +217,12 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   }
 
   const handleRestore = (entry: HistoryEntry) => {
-    if (entry.direction !== direction) {
-      // Direction switch is handled by the parent via tab; for now just note it.
-      // Restoring the input means the user can re-translate (or hit translate again).
-    }
+    const engine: Engine = entry.engine ?? 'apertium'
+    const q = { input: entry.input, direction: entry.direction, nonce: ++nonce.current }
     setInputText(entry.input)
-    setOutputText(entry.output)
+    setResults((r) => ({ ...r, [engine]: { ...q, text: entry.output, ok: true } }))
+    setRequest(q)
+    if (mode !== 'both' && mode !== engine) chooseMode(engine)
   }
 
   return (
@@ -228,16 +256,16 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
           data-gramm="false"
           aria-label="Input text to translate"
         />
-        <div className="mt-4 flex items-center gap-2 text-sm" role="radiogroup" aria-label="Translation engine">
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="radiogroup" aria-label="Translation engine">
           <span className="text-white/70">Engine:</span>
-          {([['apertium', 'Apertium (rules)'], ['neural', 'Neural β']] as const).map(([value, label]) => (
+          {MODES.map(([value, label]) => (
             <button
               key={value}
               role="radio"
-              aria-checked={engine === value}
-              onClick={() => chooseEngine(value)}
+              aria-checked={mode === value}
+              onClick={() => chooseMode(value)}
               className={`px-3 py-1.5 rounded-lg transition-all ${
-                engine === value ? 'bg-white/25 text-white font-medium' : 'bg-white/5 text-white/70 hover:bg-white/15'
+                mode === value ? 'bg-white/25 text-white font-medium' : 'bg-white/5 text-white/70 hover:bg-white/15'
               }`}
             >
               {label}
@@ -268,6 +296,10 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               It translates one sentence at a time, and the first run after loading is slower.
             </p>
             <p>
+              <b>Compare both</b> shows the two translations sentence by sentence, with the words that differ
+              highlighted. Each engine's result is kept, so switching engines does not translate the same text twice.
+            </p>
+            <p>
               <a className="underline" href="/about-en#neural">More about the neural engine</a> ·{' '}
               <a className="underline" href="https://huggingface.co/komapc/nllb-ido-epo-600m" target="_blank" rel="noopener noreferrer">
                 model card
@@ -275,7 +307,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </p>
           </div>
         )}
-        {engine === 'neural' && neural.status !== 'ready' && (
+        {mode !== 'apertium' && !neuralReady && (
           <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/15 text-sm text-white/85">
             {neural.status === 'loading' ? (
               <>
@@ -313,11 +345,11 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         )}
         <button
           onClick={handleTranslate}
-          disabled={isLoading || !inputText.trim() || neuralBlocked}
+          disabled={busy || !inputText.trim() || neuralBlocked}
           className="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
           aria-label="Translate text"
         >
-          {isLoading ? (
+          {busy ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
               Translating...
@@ -335,6 +367,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             <h2 className="text-xl font-semibold text-white">
               {direction === 'ido-epo' ? 'Esperanto' : 'Ido'} Translation
             </h2>
+            {mode !== 'both' && busy && <Loader2 className="w-5 h-5 animate-spin text-white/70" />}
             {outputText && outputEngine === 'neural' && (
               <div
                 className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200"
@@ -358,7 +391,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               </div>
             )}
           </div>
-          {outputText && (
+          {outputText && mode !== 'both' && (
             <button
               onClick={handleCopy}
               className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
@@ -372,6 +405,17 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </button>
           )}
         </div>
+        {mode === 'both' ? (
+          <CompareView
+            apertium={shown('apertium')?.ok ? normalizeDisplayWhitespace(shown('apertium')!.text) : shown('apertium')?.text ?? null}
+            neural={shown('neural')?.text ?? null}
+            apertiumPending={!!current && inflight.apertium}
+            neuralPending={!!current && inflight.neural}
+            neuralUnavailable={!neuralReady}
+            vote={vote && current && vote.nonce === current.nonce ? vote.choice : null}
+            onVote={handleVote}
+          />
+        ) : (<>
         {outputText && outputEngine === 'apertium' && (
           <div className="mb-3 flex items-center gap-2">
             <label className="flex items-center gap-2 cursor-pointer text-white/80 text-sm">
@@ -409,6 +453,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             <span className="text-purple-300/50">Translation will appear here...</span>
           )}
         </div>
+        </>)}
       </div>
     </div>
     <HistoryPanel

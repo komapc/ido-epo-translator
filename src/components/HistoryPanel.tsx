@@ -70,6 +70,7 @@ const HistoryPanel = ({ entries, onRestore, onRemove, onClear }: HistoryPanelPro
                                         <div className="text-xs text-purple-300 mb-1">
                                             {e.direction === 'ido-epo' ? 'IO → EO' : 'EO → IO'}
                                             <span className="ml-2">{formatTime(e.timestamp)}</span>
+                                            {e.engine === 'neural' && <span className="ml-2 text-purple-200">Neural β</span>}
                                         </div>
                                         <div className="text-sm text-white truncate">
                                             {truncate(e.input)}
