@@ -18,6 +18,8 @@ Chain the existing pairs: `spa → epo` (apertium-eo-es) → `epo → ido` (ours
 
 ## Phase 1: English/Spanish glosses in vortaro (days)
 
+**Spanish: done (2026-11-09).** extractor #205 (`{{es}}` lines → `spanish_words`), vortaro #167–#171: *Esperanto | Español* switch, `/io-es/` and `/es-io/`, accent-insensitive search; 10,854 of 37,858 entries. English: not started.
+
 The cheapest answer to the r/Ido request.
 
 - Extractor: keep `{{en}}` and `{{es}}` lines from io.wiktionary, as it does for `{{eo}}`. Make the target language a parameter instead of hard-coding `eo`.
