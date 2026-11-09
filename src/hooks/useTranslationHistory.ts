@@ -5,6 +5,7 @@ export interface HistoryEntry {
     direction: 'ido-epo' | 'epo-ido'
     input: string
     output: string
+    engine?: 'apertium' | 'neural' // missing in entries saved before the neural engine
 }
 
 const STORAGE_KEY = 'translator.history.v1'
@@ -44,10 +45,10 @@ export function useTranslationHistory() {
         if (!entry.input.trim() || !entry.output.trim()) return
         setHistory(prev => {
             const e: HistoryEntry = { ...entry, timestamp: Date.now() }
-            // Drop any prior entry with the exact same input+direction (so re-running
+            // Drop any prior entry with the exact same input+direction+engine (so re-running
             // a translation just bumps it to the top instead of duplicating)
             const filtered = prev.filter(
-                p => !(p.input === e.input && p.direction === e.direction)
+                p => !(p.input === e.input && p.direction === e.direction && (p.engine ?? 'apertium') === (e.engine ?? 'apertium'))
             )
             return [e, ...filtered].slice(0, MAX_ENTRIES)
         })
