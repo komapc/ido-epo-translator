@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pri la Tradukilo — Ido ↔ Esperanto</title>
-    <meta name="description" content="Pri la Ido–Esperanto-tradukilo: kiel ĝi funkcias, kiujn datumojn kaj kodon ĝi uzas, kaj rilataj projektoj.">
+    <meta name="description" content="Pri la Ido–Esperanto-tradukilo: la regul-bazita Apertium-motoro, la neŭrala motoro (beta) en la retumilo, datumoj kaj rilataj projektoj.">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="alternate" hreflang="io" href="https://tradukilo.lipu.dev/about-io">
     <link rel="alternate" hreflang="en" href="https://tradukilo.lipu.dev/about-en">
@@ -17,9 +17,13 @@
     <nav class="lang-switcher"><a href="about-io" class="lang-btn">Ido</a><a href="about-en" class="lang-btn">English</a><a href="about-eo" class="lang-btn active">Esperanto</a></nav>
     <main class="card">
         <h1>Pri la Tradukilo</h1>
-        <p>Ĉi tiu tradukilo tradukas tekstojn inter <strong>Ido</strong> kaj <strong>Esperanto</strong> en ambaŭ direktoj per la regul-bazita <a href="https://apertium.org/">Apertium</a>-maŝintraduka motoro. Ĉar la tradukado estas regul-bazita, rezultoj estas antaŭvideblaj kaj ĉiu vorto spureblas ĝis vortareca ero.</p>
+        <p>Ĉi tiu tradukilo tradukas tekstojn inter <strong>Ido</strong> kaj <strong>Esperanto</strong> en ambaŭ direktoj. Ĝi havas du motorojn: la regul-bazitan <a href="https://apertium.org/">Apertium</a>-motoron (la defaŭltan), kies rezultoj estas antaŭvideblaj kaj ĉiu vorto spureblas ĝis vortareca ero, kaj neŭralan motoron (beta), kiu funkcias en via retumilo.</p>
+        <h2 id="neural">Neŭrala tradukado (beta)</h2>
+        <p>La neŭrala motoro estas <a href="https://huggingface.co/komapc/nllb-ido-epo-600m">NLLB-200 (600M parametroj), adaptita por Ido</a> per paroj de Ido-Esperantaj frazoj. Ĝi funkcias tute en via retumilo post unufoja elŝuto de ĉirkaŭ 560 MB, kiun la retumilo konservas por postaj vizitoj, do via teksto neniam estas sendata al servilo.</p>
+        <ul><li>Kvalito: ĉe aparta testaro de 1000 frazoj ĝi atingas chrF 73, kontraŭ 65 por la regul-bazita motoro.</li><li>Ĝi estas kutime pli flua, sed ĝi povas ŝanĝi aŭ elpensi vortojn, do kontrolu nomojn, nombrojn kaj maloftajn terminojn.</li><li>Ĝi tradukas po unu frazo kaj plej bone funkcias por ĉiutagaj frazoj.</li><li>La modelo havas la permesilon CC BY-NC 4.0 (nekomerca).</li></ul>
+        <p>Elektu <strong>Neural β</strong> sub la eniga kampo. Ekzistas ankaŭ <a href="https://huggingface.co/spaces/komapc/ido-epo-translator">aparta demonstraĵo</a>.</p>
         <h2>Trajtoj</h2>
-        <ul><li>Dudirekta tradukado (Ido ↔ Esperanto)</li><li>Morfologia analizo de vortoj</li><li>Malferma fontkodo kaj libera uzo</li></ul>
+        <ul><li>Dudirekta tradukado (Ido ↔ Esperanto)</li><li>Regul-bazita kaj neŭrala (en la retumilo) motoroj</li><li>Morfologia analizo de vortoj</li><li>Malferma fontkodo kaj libera uzo</li></ul>
         <h2>Datumoj kaj fontoj</h2>
         <p>La vortaroj kaj reguloj estas malfermaj. La vortaro estas konstruita el datumoj de Vikivortaro kaj Vikipedio, kaj samaj datumoj funkciigas la <a href="https://vortaro.lipu.dev/">Ido–Esperanto-Vortaron (Vortaro)</a>.</p>
         <h2>Rilataj projektoj</h2>

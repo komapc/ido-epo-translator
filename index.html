@@ -12,22 +12,22 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="AupDKKNBCGrm9DC7wPutgANwT0WQDpQMqqky5eqiERk" />
-    <meta name="description" content="Free online Ido–Esperanto translator powered by Apertium: fast two-way machine translation between Ido and Esperanto. Tradukilo inter Ido ed Esperanto.">
-    <meta name="keywords" content="Ido, Esperanto, translator, translation, tradukilo, Apertium, machine translation, auxlang, Ido language, Ido translator, constructed language, planned language, conlang translator, international auxiliary language, Ido to Esperanto, Esperanto to Ido, online translator, free translator, two-way translator, auxlang translation, Ido text translator">
+    <meta name="description" content="Free online Ido–Esperanto translator, both directions. Choose rule-based Apertium or a neural model (NLLB) that runs in your browser, so your text stays on your device. Tradukilo inter Ido ed Esperanto.">
+    <meta name="keywords" content="Ido, Esperanto, translator, translation, tradukilo, Apertium, machine translation, neural machine translation, NLLB, auxlang, Ido language, Ido translator, constructed language, planned language, conlang translator, international auxiliary language, Ido to Esperanto, Esperanto to Ido, online translator, free translator, two-way translator, auxlang translation, Ido text translator">
     <meta name="author" content="komapc">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tradukilo.lipu.dev/">
-    <meta property="og:title" content="Free Ido–Esperanto Translator | Apertium Machine Translation">
-    <meta property="og:description" content="Free two-way machine translation between Ido and Esperanto — international auxiliary languages. Powered by Apertium.">
+    <meta property="og:title" content="Free Ido–Esperanto Translator | Apertium & Neural">
+    <meta property="og:description" content="Free two-way translation between Ido and Esperanto: rule-based Apertium, or a neural model that runs privately in your browser.">
     <meta property="og:image" content="https://tradukilo.lipu.dev/og-image.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://tradukilo.lipu.dev/">
-    <meta name="twitter:title" content="Free Ido–Esperanto Translator | Apertium Machine Translation">
-    <meta name="twitter:description" content="Free two-way machine translation between Ido and Esperanto — international auxiliary languages. Powered by Apertium.">
+    <meta name="twitter:title" content="Free Ido–Esperanto Translator | Apertium & Neural">
+    <meta name="twitter:description" content="Free two-way translation between Ido and Esperanto: rule-based Apertium, or a neural model that runs privately in your browser.">
     <meta name="twitter:image" content="https://tradukilo.lipu.dev/og-image.png">
 
     <!-- Canonical URL -->
@@ -37,11 +37,26 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Ido-Esperanto Translator",
+      "@type": "WebApplication",
+      "name": "Ido–Esperanto Translator",
+      "url": "https://tradukilo.lipu.dev/",
       "operatingSystem": "Web",
-      "applicationCategory": "TranslationApplication",
-      "description": "Machine translation service between Ido and Esperanto using the Apertium engine.",
+      "applicationCategory": "UtilitiesApplication",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": ["io", "eo"],
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "description": "Free two-way machine translation between Ido and Esperanto, with a rule-based Apertium engine and a neural engine (NLLB-200 fine-tuned for Ido) that runs in the browser.",
+      "featureList": [
+        "Ido to Esperanto and Esperanto to Ido translation",
+        "Rule-based engine (Apertium) with unknown words marked",
+        "Neural engine (NLLB-200 600M fine-tuned for Ido) that runs in the browser; text is not sent to a server",
+        "Translation history"
+      ],
+      "sameAs": [
+        "https://github.com/komapc/ido-epo-translator",
+        "https://huggingface.co/komapc/nllb-ido-epo-600m"
+      ],
       "author": {
         "@type": "Person",
         "name": "komapc"
@@ -52,7 +67,7 @@
 <!-- Google Analytics: loads only after consent (see consent.js) -->
     <script>window.gtag=function(){};</script>
     <script defer src="/consent.js" data-ga="G-X1T3T62ZLR"></script>
-    <title>Free Ido–Esperanto Translator | Apertium Machine Translation</title>
+    <title>Free Ido–Esperanto Translator | Apertium & Neural</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1f3f7a">
     <script>

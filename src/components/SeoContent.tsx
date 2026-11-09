@@ -22,11 +22,28 @@ const SeoContent = () => (
     <p className="mb-4">
       This is a free online translator between <strong>Ido</strong> and{' '}
       <strong>Esperanto</strong>, two international auxiliary languages. It works in both
-      directions, Ido to Esperanto and Esperanto to Ido, and is built on{' '}
-      <a className="underline" href="https://apertium.org/">Apertium</a>, an open-source
-      rule-based machine translation engine. Because translation is rule-based rather than
-      statistical, results are predictable and every word can be traced back to a dictionary
-      entry.
+      directions, Ido to Esperanto and Esperanto to Ido, and offers two engines. The default
+      is <a className="underline" href="https://apertium.org/">Apertium</a>, an open-source
+      rule-based machine translation engine: results are predictable and every word can be
+      traced back to a dictionary entry. The second, <strong>Neural β</strong>, is a neural
+      model that runs entirely in your browser.
+    </p>
+
+    <h2 id="neural" className="text-xl font-semibold text-white mb-2">Neural translation (beta)</h2>
+    <p className="mb-4">
+      The neural engine is{' '}
+      <a className="underline" href="https://huggingface.co/komapc/nllb-ido-epo-600m">
+        NLLB-200 (600M parameters) fine-tuned for Ido
+      </a>
+      , trained on Ido–Esperanto sentence pairs. It runs on your device after a one-time download
+      of about 560 MB, which your browser keeps for later visits, so the text you translate is
+      never sent to a server. On a held-out test set of 1,000 sentences it scores chrF 73
+      against 65 for the rule-based engine. It is usually more fluent, but it can change or
+      invent words, so check names, numbers and rare terms. You can also try it as a{' '}
+      <a className="underline" href="https://huggingface.co/spaces/komapc/ido-epo-translator">
+        standalone demo
+      </a>
+      .
     </p>
 
     <h2 className="text-xl font-semibold text-white mb-2">Example translations</h2>
@@ -56,6 +73,7 @@ const SeoContent = () => (
     <ol className="list-decimal list-inside mb-4 space-y-1">
       <li>Pick the direction with the swap button: Ido → Esperanto or Esperanto → Ido.</li>
       <li>Type or paste your text into the input box.</li>
+      <li>Optionally pick the engine: Apertium (rules) or Neural β.</li>
       <li>The translation appears next to it.</li>
     </ol>
 
@@ -87,8 +105,24 @@ const SeoContent = () => (
       <div>
         <dt className="font-semibold text-white">How accurate is it?</dt>
         <dd>
-          Good for related-language text with common vocabulary. Rare words and idioms may
-          be left untranslated, and the output should be checked for important text.
+          Good for related-language text with common vocabulary. With the rule-based engine,
+          rare words and idioms may be left untranslated; the neural engine is more fluent but
+          can make up words. Check the output for important text.
+        </dd>
+      </div>
+      <div>
+        <dt className="font-semibold text-white">Is my text sent to a server?</dt>
+        <dd>
+          With the rule-based engine, the text goes to our Apertium server to be translated.
+          With the neural engine, translation happens in your browser and the text stays on
+          your device.
+        </dd>
+      </div>
+      <div>
+        <dt className="font-semibold text-white">Which engine should I use?</dt>
+        <dd>
+          Neural β for natural-sounding everyday sentences; Apertium for predictable,
+          word-by-word output, for long texts, or when you cannot download the 560 MB model.
         </dd>
       </div>
       <div>
