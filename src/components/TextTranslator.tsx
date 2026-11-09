@@ -251,8 +251,15 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={(e) => {
+            // Ctrl/Cmd+Enter translates, like most translator sites
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault()
+              if (!busy && inputText.trim() && !neuralBlocked) handleTranslate()
+            }
+          }}
           placeholder={`Enter ${direction === 'ido-epo' ? 'Ido' : 'Esperanto'} text here...`}
-          className="w-full h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+          className="w-full h-36 sm:h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
           data-gramm="false"
           aria-label="Input text to translate"
         />
@@ -348,6 +355,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
           disabled={busy || !inputText.trim() || neuralBlocked}
           className="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
           aria-label="Translate text"
+          title="Ctrl+Enter"
         >
           {busy ? (
             <>
@@ -378,7 +386,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             )}
             {outputText && outputEngine === 'apertium' && (
               <div 
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
                   qualityScore >= 95 
                     ? 'bg-green-500/20 text-green-300' 
                     : qualityScore >= 80 
@@ -417,8 +425,8 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
           />
         ) : (<>
         {outputText && outputEngine === 'apertium' && (
-          <div className="mb-3 flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer text-white/80 text-sm">
+          <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <label className="flex items-center gap-2 cursor-pointer text-white/80 text-sm whitespace-nowrap">
               <input
                 type="checkbox"
                 checked={!useColorMode}
@@ -428,7 +436,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               />
               Show symbols (*#@)
             </label>
-            <div className="ml-auto flex items-center gap-3 text-xs text-white/70">
+            <div className="ml-auto flex items-center gap-3 text-xs text-white/70 whitespace-nowrap">
               <span className="flex items-center gap-1">
                 <span className="w-3 h-3 bg-red-400 rounded"></span>
                 Unknown
@@ -444,13 +452,13 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </div>
           </div>
         )}
-        <div className="w-full h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white overflow-y-auto whitespace-normal break-normal font-sans leading-7 text-[15px]" data-gramm="false">
+        <div className="w-full min-h-[9rem] sm:h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white overflow-y-auto whitespace-normal break-normal font-sans leading-7 text-[15px]" data-gramm="false">
           {outputText ? (
             outputEngine === 'neural'
               ? <p className="whitespace-pre-wrap">{outputText}</p>
               : renderColoredOutput(outputText)
           ) : (
-            <span className="text-purple-300/50">Translation will appear here...</span>
+            <span className="text-white/50">Translation will appear here...</span>
           )}
         </div>
         </>)}
