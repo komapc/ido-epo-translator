@@ -1,7 +1,12 @@
-import { useState } from 'react'
-import { Loader2, Copy, CheckCircle, Shuffle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Loader2, Copy, CheckCircle, Shuffle, Download } from 'lucide-react'
 import HistoryPanel from './HistoryPanel'
 import { useTranslationHistory, type HistoryEntry } from '../hooks/useTranslationHistory'
+import { useNeuralTranslator, isNeuralModelCached } from '../neural/useNeuralTranslator'
+import { NEURAL_MODEL_MB } from '../neural/protocol'
+
+type Engine = 'apertium' | 'neural'
+const ENGINE_KEY = 'translator.engine'
 
 interface TextTranslatorProps {
   direction: 'ido-epo' | 'epo-ido'
@@ -15,6 +20,25 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const [copied, setCopied] = useState(false)
   const [useColorMode, setUseColorMode] = useState(true)
   const { history, addEntry, removeEntry, clearAll } = useTranslationHistory()
+  // 'apertium' on first render so SSR markup and hydration match; the saved choice is applied after mount.
+  const [engine, setEngine] = useState<Engine>('apertium')
+  const [outputEngine, setOutputEngine] = useState<Engine>('apertium')
+  const neural = useNeuralTranslator()
+
+  useEffect(() => {
+    let saved: string | null = null
+    try { saved = window.localStorage.getItem(ENGINE_KEY) } catch { /* storage disabled */ }
+    if (saved !== 'neural') return
+    setEngine('neural')
+    // A returning visitor with the model already cached gets it loaded without asking again.
+    isNeuralModelCached().then((cached) => { if (cached) neural.load() })
+  }, [neural.load])
+
+  const chooseEngine = (e: Engine) => {
+    setEngine(e)
+    try { window.localStorage.setItem(ENGINE_KEY, e) } catch { /* storage disabled */ }
+  }
+  const neuralBlocked = engine === 'neural' && neural.status !== 'ready'
 
   // Replace exotic Unicode spaces with normal spaces; collapse runs of spaces (but preserve newlines)
   const normalizeDisplayWhitespace = (text: string): string => {
@@ -100,6 +124,26 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     if (!inputText.trim()) return
 
     setIsLoading(true)
+    if (engine === 'neural') {
+      try {
+        const translation = await neural.translate(inputText, direction)
+        setOutputText(translation)
+        setOutputEngine('neural')
+        addEntry({ direction, input: inputText, output: translation })
+        ;(window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'translate', {
+          direction,
+          chars: inputText.length,
+          engine: 'neural',
+        })
+      } catch (error) {
+        console.error('Neural translation error:', error)
+        setOutputText('Error: neural translation failed')
+        setOutputEngine('neural')
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
     try {
       // Use API endpoint (Cloudflare Worker for Pages, local for dev)
       const apiUrl = import.meta.env.VITE_API_URL || '/api/translate'
@@ -118,6 +162,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       const data = await response.json()
       const translation = data.translation || 'Translation failed'
       setOutputText(translation)
+      setOutputEngine('apertium')
       // Persist to history (only when we got a non-error response)
       if (data.translation) {
         addEntry({ direction, input: inputText, output: translation })
@@ -125,6 +170,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         ;(window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'translate', {
           direction,
           chars: inputText.length,
+          engine: 'apertium',
         })
       }
     } catch (error) {
@@ -181,9 +227,60 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
           data-gramm="false"
           aria-label="Input text to translate"
         />
+        <div className="mt-4 flex items-center gap-2 text-sm" role="radiogroup" aria-label="Translation engine">
+          <span className="text-white/70">Engine:</span>
+          {([['apertium', 'Apertium (rules)'], ['neural', 'Neural β']] as const).map(([value, label]) => (
+            <button
+              key={value}
+              role="radio"
+              aria-checked={engine === value}
+              onClick={() => chooseEngine(value)}
+              className={`px-3 py-1.5 rounded-lg transition-all ${
+                engine === value ? 'bg-white/25 text-white font-medium' : 'bg-white/5 text-white/70 hover:bg-white/15'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {engine === 'neural' && neural.status !== 'ready' && (
+          <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/15 text-sm text-white/85">
+            {neural.status === 'loading' ? (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {neural.progress.total
+                    ? `Downloading the model… ${Math.round(neural.progress.loaded / 1e6)} / ${Math.round(neural.progress.total / 1e6)} MB`
+                    : 'Starting…'}
+                </div>
+                <progress
+                  className="w-full h-2 accent-purple-500"
+                  max={1}
+                  value={neural.progress.total ? neural.progress.loaded / neural.progress.total : 0}
+                />
+              </>
+            ) : (
+              <>
+                <p className="mb-2">
+                  The neural translator (NLLB-200 fine-tuned for Ido) runs <b>in your browser</b>, so your text is not
+                  sent to any server. It needs a one-time download of about {NEURAL_MODEL_MB} MB, which your browser
+                  then caches. It is often more fluent than Apertium, but it can make up words, so check names and numbers.
+                </p>
+                {neural.status === 'error' && <p className="mb-2 text-orange-300">Loading failed: {neural.error}</p>}
+                <button
+                  onClick={neural.load}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg transition-all"
+                >
+                  <Download className="w-4 h-4" />
+                  Download model (~{NEURAL_MODEL_MB} MB)
+                </button>
+              </>
+            )}
+          </div>
+        )}
         <button
           onClick={handleTranslate}
-          disabled={isLoading || !inputText.trim()}
+          disabled={isLoading || !inputText.trim() || neuralBlocked}
           className="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
           aria-label="Translate text"
         >
@@ -205,7 +302,15 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             <h2 className="text-xl font-semibold text-white">
               {direction === 'ido-epo' ? 'Esperanto' : 'Ido'} Translation
             </h2>
-            {outputText && (
+            {outputText && outputEngine === 'neural' && (
+              <div
+                className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200"
+                title="Translated by the neural model in your browser"
+              >
+                Neural β
+              </div>
+            )}
+            {outputText && outputEngine === 'apertium' && (
               <div 
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
                   qualityScore >= 95 
@@ -234,7 +339,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </button>
           )}
         </div>
-        {outputText && (
+        {outputText && outputEngine === 'apertium' && (
           <div className="mb-3 flex items-center gap-2">
             <label className="flex items-center gap-2 cursor-pointer text-white/80 text-sm">
               <input
@@ -264,7 +369,9 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         )}
         <div className="w-full h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white overflow-y-auto whitespace-normal break-normal font-sans leading-7 text-[15px]" data-gramm="false">
           {outputText ? (
-            renderColoredOutput(outputText)
+            outputEngine === 'neural'
+              ? <p className="whitespace-pre-wrap">{outputText}</p>
+              : renderColoredOutput(outputText)
           ) : (
             <span className="text-purple-300/50">Translation will appear here...</span>
           )}

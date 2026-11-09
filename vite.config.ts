@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // The neural-translation worker dynamically imports transformers.js from a CDN,
+  // which needs an ES-module worker (the default iife format can't code-split).
+  worker: { format: 'es' },
   // Proxy /api to local APy server for development
   server: {
     proxy: {

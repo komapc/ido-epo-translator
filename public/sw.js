@@ -23,8 +23,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Skip API calls and Analytics
-  if (url.pathname.startsWith('/api/') || 
+  // 2. Skip API calls, Analytics and every cross-origin request (e.g. the ~560 MB
+  //    neural model from huggingface.co, which transformers.js caches itself)
+  if (url.origin !== self.location.origin ||
+      url.pathname.startsWith('/api/') || 
       url.hostname.includes('google-analytics') || 
       url.hostname.includes('googletagmanager')) {
     return;
