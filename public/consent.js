@@ -34,8 +34,9 @@
       'background:#fff;color:#1f1b16;border:1px solid #cfc6b6;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);' +
       'font:14px/1.4 system-ui,sans-serif;z-index:2147483000;display:flex;flex-wrap:wrap;gap:8px;align-items:center}' +
       '#lipu-consent span{flex:1 1 220px}#lipu-consent button{font:inherit;padding:6px 12px;border-radius:8px;cursor:pointer;' +
-      'border:1px solid #c8402a;background:none;color:inherit}#lipu-consent button.y{background:#c8402a;color:#fff}' +
-      '@media(prefers-color-scheme:dark){#lipu-consent{background:#1e1b16;color:#f1ebe0;border-color:#5a5144}}';
+      'border:1px solid #7e22ce;background:none;color:inherit}#lipu-consent button.y{background:#7e22ce;color:#fff}' +
+      '@media(max-width:480px){#lipu-consent span{flex-basis:100%}}' +
+      '@media(prefers-color-scheme:dark){#lipu-consent{background:#1e1b16;color:#f1ebe0;border-color:#5a5144}#lipu-consent button{border-color:#a78bfa}#lipu-consent button.y{background:#7e22ce}}';
     var d = document.createElement('div');
     d.id = 'lipu-consent'; d.setAttribute('role', 'dialog');
     var sp = document.createElement('span'); sp.textContent = t[0];
