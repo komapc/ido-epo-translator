@@ -354,12 +354,12 @@ const DictionariesDialog = ({ isOpen, onClose }: DictionariesDialogProps) => {
                                         </span>
                                     </div>
                                     <div className="text-xs text-gray-400 mb-1">By source:</div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-sm">
                                         {Object.entries(vortaroStats.sourceStats)
                                             .sort((a, b) => b[1] - a[1])
                                             .map(([src, count]) => (
-                                                <div key={src} className="flex justify-between">
-                                                    <span className="text-gray-300">{src}</span>
+                                                <div key={src} className="flex justify-between gap-2 min-w-0">
+                                                    <span className="text-gray-300 truncate" title={src}>{src}</span>
                                                     <span className="text-white font-mono">
                                                         {count.toLocaleString()}
                                                     </span>

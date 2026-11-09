@@ -26,55 +26,44 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1f3f7a] via-[#1f3f7a] to-[#1f7a3a]">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="text-center mb-8 relative">
-          <div className="absolute right-0 top-0 flex gap-2">
-             <a 
-              href="https://vortaro.lipu.dev" 
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
-            >
-              <Book className="w-4 h-4" />
-              Dictionary
-            </a>
-            <a 
-              href="https://echodrift.lipu.dev" 
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
-            >
-              <Globe className="w-4 h-4" />
-              EchoDrift
-            </a>
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Ido ⟷ Esperanto Translator
-          </h1>
-          <p className="text-white/80">
-            Powered by Apertium Machine Translation
-          </p>
-        </header>
-
-        {/* Admin Controls */}
-        <div className="flex justify-center gap-4 mb-6">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        {/* Top bar: secondary links in normal flow, so they never sit on the title */}
+        <nav className="flex flex-wrap justify-center sm:justify-end gap-0.5 sm:gap-1 mb-3 sm:mb-4" aria-label="Site">
+          <a href="https://vortaro.lipu.dev" className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 text-white/80 text-[13px] sm:text-sm hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Book className="w-4 h-4" />
+            Vortaro
+          </a>
+          <a href="https://echodrift.lipu.dev" className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 text-white/80 text-[13px] sm:text-sm hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Globe className="w-4 h-4" />
+            EchoDrift
+          </a>
           <button
             onClick={() => setIsDictionariesOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1f7a3a] hover:bg-[#1a6a33] text-white font-medium rounded-lg transition-all"
-            aria-label="Manage dictionaries"
+            className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 text-white/80 text-[13px] sm:text-sm hover:text-white hover:bg-white/10 rounded-md transition-colors"
+            aria-label="Dictionary sources and versions"
           >
             <Database className="w-4 h-4" />
             Dictionaries
           </button>
-          <a
-            href={`/about-${ABOUT_LANG}`}
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-all"
-          >
+          <a href={`/about-${ABOUT_LANG}`} className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 text-white/80 text-[13px] sm:text-sm hover:text-white hover:bg-white/10 rounded-md transition-colors">
             <Info className="w-4 h-4" />
             About
           </a>
-        </div>
+        </nav>
+
+        {/* Header */}
+        <header className="text-center mb-5 sm:mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">
+            Ido ⟷ Esperanto Translator
+          </h1>
+          <p className="text-white/80 text-sm sm:text-base">
+            Powered by Apertium Machine Translation
+          </p>
+        </header>
 
         {/* Language Direction Selector */}
-        <div className="flex justify-center items-center gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center gap-4">
+        <div className="flex justify-center items-center gap-4 mb-5 sm:mb-8">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-5 py-2 sm:px-6 sm:py-3 flex items-center gap-4">
             <span className="text-white font-medium">
               {direction === 'ido-epo' ? 'Ido' : 'Esperanto'}
             </span>
