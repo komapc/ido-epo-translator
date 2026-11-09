@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ido to Esperanto Translator — free online Apertium translation</title>
-    <meta name="description" content="Translate Ido text to Esperanto online for free. Rule-based Apertium machine translation with examples and notes on accuracy.">
+    <title>Ido to Esperanto Translator — free online translation (Apertium & neural)</title>
+    <meta name="description" content="Translate Ido text to Esperanto online for free, with rule-based Apertium or a neural model that runs in your browser. Examples and notes on accuracy.">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="canonical" href="https://tradukilo.lipu.dev/ido-epo">
     <link rel="stylesheet" href="/static.css">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tradukilo.lipu.dev/ido-epo">
-    <meta property="og:title" content="Ido to Esperanto Translator — free online Apertium translation">
-    <meta property="og:description" content="Translate Ido text to Esperanto online for free. Rule-based Apertium machine translation with examples and notes on accuracy.">
+    <meta property="og:title" content="Ido to Esperanto Translator — free online translation (Apertium & neural)">
+    <meta property="og:description" content="Translate Ido text to Esperanto online for free, with rule-based Apertium or a neural model that runs in your browser. Examples and notes on accuracy.">
     <meta property="og:image" content="https://tradukilo.lipu.dev/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Ido to Esperanto Translator — free online Apertium translation">
-    <meta name="twitter:description" content="Translate Ido text to Esperanto online for free. Rule-based Apertium machine translation with examples and notes on accuracy.">
+    <meta name="twitter:title" content="Ido to Esperanto Translator — free online translation (Apertium & neural)">
+    <meta name="twitter:description" content="Translate Ido text to Esperanto online for free, with rule-based Apertium or a neural model that runs in your browser. Examples and notes on accuracy.">
     <meta name="twitter:image" content="https://tradukilo.lipu.dev/og-image.png">
     <script type="application/ld+json">
 {
@@ -23,7 +23,7 @@
     "@type": "WebApplication",
     "name": "Ido → Esperanto translator",
     "url": "https://tradukilo.lipu.dev/ido-epo",
-    "description": "Translate Ido text into Esperanto for free with the rule-based Apertium engine.",
+    "description": "Translate Ido text into Esperanto for free, with the rule-based Apertium engine or an in-browser neural model.",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Web",
     "browserRequirements": "Requires JavaScript",
@@ -48,8 +48,9 @@
 <body>
     <main class="card">
         <h1>Ido → Esperanto translator</h1>
-        <p>Translate <strong>Ido</strong> text into <strong>Esperanto</strong> for free. The translator uses the rule-based
-        <a href="https://apertium.org/">Apertium</a> engine, so every word can be traced back to a dictionary entry and results are predictable.</p>
+        <p>Translate <strong>Ido</strong> text into <strong>Esperanto</strong> for free. You can choose between two engines: the rule-based
+        <a href="https://apertium.org/">Apertium</a> engine, where every word can be traced back to a dictionary entry and results are predictable,
+        and a neural engine (beta) that runs entirely in your browser.</p>
         <a class="cta" href="/">Open the translator</a>
 
         <h2>Examples</h2>
@@ -63,6 +64,12 @@
         <p>Ido and Esperanto are closely related, so most of the translation is word-for-word lookup in the
         <a href="https://vortaro.lipu.dev/">Ido–Esperanto dictionary (Vortaro)</a>, with transfer rules for endings, articles and word order.
         The dictionaries and rules are open source.</p>
+
+        <h2>Neural engine (beta)</h2>
+        <p>Switch the engine to <strong>Neural β</strong> to use NLLB-200 (600M parameters) fine-tuned on Ido–Esperanto sentence pairs.
+        It runs in your browser after a one-time download of about 560 MB, so your text is not sent to any server.
+        It is often more fluent than the rule-based engine, but it can change or invent words, so check names and numbers.
+        Examples in the table above are from the rule-based engine. <a href="/about-en#neural">More about the neural engine</a>.</p>
 
         <h2>Tips for better results</h2>
         <p>Translate whole sentences rather than isolated words, so the transfer rules can pick the right endings and articles.

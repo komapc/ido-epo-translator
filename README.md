@@ -1,9 +1,32 @@
 # Ido-Esperanto Translator
 
-Machine translation between Ido and Esperanto, powered by [Apertium](https://apertium.org).
+Machine translation between Ido and Esperanto, with two engines: rule-based [Apertium](https://apertium.org) (server) and a neural model (beta) that runs in the browser.
 
 **Live:** https://tradukilo.lipu.dev
 **Operations guide:** [RUNBOOK.md](RUNBOOK.md)
+
+## Neural engine (beta)
+
+The **Engine: Apertium (rules) | Neural β** switch under the input box selects a second engine:
+[komapc/nllb-ido-epo-600m](https://huggingface.co/komapc/nllb-ido-epo-600m), NLLB-200 600M fine-tuned on
+Ido–Esperanto sentence pairs. Training and evaluation live in [komapc/ido-epo-llm](https://github.com/komapc/ido-epo-llm).
+
+- **Runs client-side.** `src/neural/nllbWorker.ts` is a module Web Worker that loads
+  [transformers.js](https://huggingface.co/docs/transformers.js) 4.3.1 from jsDelivr and the browser build
+  [komapc/nllb-ido-epo-600m-onnx](https://huggingface.co/komapc/nllb-ido-epo-600m-onnx) (vocab pruned 256k→72k,
+  int8, ~560 MB) from Hugging Face. Text never reaches our server or the APy backend.
+- **Download is opt-in.** Nothing is fetched until the user clicks *Download model*. The files go to the
+  `transformers-cache` Cache Storage, and returning visitors with the engine set to neural (`translator.engine`
+  in localStorage) get the model loaded automatically. `public/sw.js` ignores cross-origin requests, so the
+  service worker does not cache the model a second time.
+- **Sentence by sentence.** The model was trained on short sentences, so input is split on sentence punctuation
+  and translated one sentence at a time (greedy decoding, `max_new_tokens: 256`).
+- **Quality.** On the 1,000-pair held-out test set: chrF 73.0 for the browser build (73.4 full model, beam 4)
+  vs 65.2 for Apertium. It can invent words, which is why the UI labels it β and shows no quality score.
+- **Files:** `src/neural/protocol.ts` (worker messages, `NEURAL_MODEL_MB`), `nllbWorker.ts`,
+  `useNeuralTranslator.ts` (lazy singleton worker + React hook), and the engine switch and help panel in
+  `src/components/TextTranslator.tsx`.
+- **License:** the model is CC BY-NC 4.0 (training data includes Tatoeba, CC BY 2.0 FR).
 
 ## Architecture
 
@@ -73,7 +96,9 @@ wrangler.toml                     Wrangler config + dev env vars
 src/                              React frontend
   App.tsx
   components/
-    TextTranslator.tsx            Translation UI + quality scoring
+    TextTranslator.tsx            Translation UI + quality scoring + engine switch
+    SeoContent.tsx                Crawlable explainer + FAQ (also prerendered)
+  neural/                         In-browser NLLB engine (worker, hook, protocol)
     DictionariesDialog.tsx        Admin: pull/build repos
     RepoVersions.tsx              Footer version display
     Footer.tsx
