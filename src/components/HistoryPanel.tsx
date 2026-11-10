@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { History, X, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import type { HistoryEntry } from '../hooks/useTranslationHistory'
+import { LANG_SHORT, type Lang } from '../langs'
 
 interface HistoryPanelProps {
     entries: HistoryEntry[]
@@ -68,7 +69,7 @@ const HistoryPanel = ({ entries, onRestore, onRemove, onClear }: HistoryPanelPro
                                         title="Click to restore"
                                     >
                                         <div className="text-xs text-purple-300 mb-1">
-                                            {e.direction === 'ido-epo' ? 'IO → EO' : 'EO → IO'}
+                                            {e.direction.split('-').map((l) => LANG_SHORT[l as Lang] ?? l.toUpperCase()).join(' → ')}
                                             <span className="ml-2">{formatTime(e.timestamp)}</span>
                                             {e.engine === 'neural' && <span className="ml-2 text-purple-200">Neural β</span>}
                                         </div>

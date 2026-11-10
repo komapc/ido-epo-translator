@@ -1,8 +1,9 @@
 // Helpers for showing the Apertium and neural translations side by side:
 // sentence alignment and a word-level diff. Pure functions, no React.
 
-// Same rule the neural worker uses to cut input into sentences (nllbWorker.ts).
-const SENT = /(?<=[.!?…])\s+(?=["«„(]?[A-ZĈĜĤĴŜŬ0-9])/u
+// Sentence boundaries: end punctuation, then whitespace, then an uppercase letter or digit,
+// optionally after an opening quote or the Spanish ¿ ¡. Also used by the neural worker.
+const SENT = /(?<=[.!?…])\s+(?=["«„(¿¡]?[\p{Lu}0-9])/u
 
 export const splitSentences = (line: string): string[] =>
   line.trim() ? line.trim().split(SENT).filter(Boolean) : []

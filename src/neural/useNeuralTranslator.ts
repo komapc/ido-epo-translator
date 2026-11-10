@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Direction, NeuralRequest, NeuralResponse } from './protocol'
+import type { Direction } from '../langs'
+import { NEURAL_MODEL_ID, PART_MB, PARTS, partsFor, type NeuralRequest, type NeuralResponse, type Part } from './protocol'
 
 export type NeuralStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -7,7 +8,7 @@ export type NeuralStatus = 'idle' | 'loading' | 'ready' | 'error'
 // during SSR/prerender or on a plain visit.
 let worker: Worker | null = null
 const listeners = new Set<(m: NeuralResponse) => void>()
-let lastStatus: NeuralStatus = 'idle'
+const partStatus: Record<Part, NeuralStatus> = { base: 'idle', ido: 'idle' }
 
 function getWorker(): Worker {
   if (!worker) {
@@ -18,19 +19,38 @@ function getWorker(): Worker {
 }
 const send = (m: NeuralRequest) => getWorker().postMessage(m)
 
-/** True when transformers.js already cached the model (a returning visitor), so loading costs no download. */
-export async function isNeuralModelCached(): Promise<boolean> {
+const CACHE = 'transformers-cache'
+// Cache keys are the download URLs, e.g. …/nllb-ido-multi-onnx/resolve/main/onnx_ido/decoder_model_merged_quantized.onnx
+const PART_FILE: Record<Part, string> = { base: '/onnx/decoder_model_merged_quantized', ido: '/onnx_ido/decoder_model_merged_quantized' }
+
+/** Parts transformers.js already cached (a returning visitor), so loading them costs no download. */
+export async function cachedParts(): Promise<Part[]> {
   try {
-    if (typeof caches === 'undefined' || !(await caches.keys()).includes('transformers-cache')) return false
-    const keys = await (await caches.open('transformers-cache')).keys()
-    return keys.some((r) => r.url.includes('nllb-ido-epo-600m-onnx') && r.url.includes('decoder_model_merged_quantized'))
+    if (typeof caches === 'undefined' || !(await caches.keys()).includes(CACHE)) return []
+    const urls = (await (await caches.open(CACHE)).keys()).map((r) => r.url).filter((u) => u.includes(NEURAL_MODEL_ID))
+    return PARTS.filter((p) => urls.some((u) => u.includes(PART_FILE[p])))
   } catch {
-    return false
+    return []
   }
 }
 
-export function useNeuralTranslator() {
-  const [status, setStatus] = useState<NeuralStatus>(lastStatus)
+/** Drop the files of the previous Ido–Esperanto-only model (~560 MB) once the new one works. */
+async function dropOldModel() {
+  try {
+    if (typeof caches === 'undefined' || !(await caches.keys()).includes(CACHE)) return
+    const cache = await caches.open(CACHE)
+    for (const r of await cache.keys()) if (r.url.includes('/komapc/nllb-ido-epo-600m-onnx/')) await cache.delete(r)
+  } catch { /* best effort */ }
+}
+
+const combine = (parts: Part[], st: Record<Part, NeuralStatus>): NeuralStatus =>
+  parts.some((p) => st[p] === 'error') ? 'error'
+  : parts.some((p) => st[p] === 'loading') ? 'loading'
+  : parts.every((p) => st[p] === 'ready') ? 'ready' : 'idle'
+
+/** Neural engine state for one direction: its parts, their download, and translation. */
+export function useNeuralTranslator(direction: Direction) {
+  const [status, setStatus] = useState<Record<Part, NeuralStatus>>({ ...partStatus })
   const [progress, setProgress] = useState({ loaded: 0, total: 0 })
   const [error, setError] = useState<string | null>(null)
   const files = useRef(new Map<string, [number, number]>())
@@ -38,21 +58,24 @@ export function useNeuralTranslator() {
   const nextId = useRef(0)
 
   useEffect(() => {
+    const setPart = (p: Part, s: NeuralStatus) => { partStatus[p] = s; setStatus({ ...partStatus }) }
     const onMsg = (m: NeuralResponse) => {
       if (m.type === 'progress') {
-        files.current.set(m.file, [m.loaded, m.total])
+        files.current.set(`${m.part}:${m.file}`, [m.loaded, m.total])
         let loaded = 0, total = 0
         for (const [l, t] of files.current.values()) { loaded += l; total += t }
         setProgress({ loaded, total })
       } else if (m.type === 'ready') {
-        lastStatus = 'ready'; setStatus('ready'); setError(null)
+        setPart(m.part, 'ready'); setError(null)
+        if (m.part === 'base') dropOldModel()
       } else if (m.type === 'result') {
         pending.current.get(m.id)?.resolve(m.text); pending.current.delete(m.id)
       } else if (m.type === 'error') {
         if (m.id !== undefined && pending.current.has(m.id)) {
           pending.current.get(m.id)!.reject(new Error(m.message)); pending.current.delete(m.id)
         } else {
-          lastStatus = 'error'; setStatus('error'); setError(m.message)
+          if (m.part) setPart(m.part, 'error')
+          setError(m.message)
         }
       }
     }
@@ -60,17 +83,31 @@ export function useNeuralTranslator() {
     return () => { listeners.delete(onMsg) }
   }, [])
 
-  const load = useCallback(() => {
-    if (lastStatus === 'loading' || lastStatus === 'ready') return
-    lastStatus = 'loading'; setStatus('loading'); setError(null)
-    send({ type: 'load' })
-  }, [])
+  const needed = partsFor(direction)
+  const missing = needed.filter((p) => status[p] !== 'ready')
 
-  const translate = useCallback((text: string, direction: Direction) => new Promise<string>((resolve, reject) => {
+  /** Download (or load from cache) whatever this direction still needs. */
+  const load = useCallback(() => {
+    const parts = partsFor(direction).filter((p) => partStatus[p] === 'idle' || partStatus[p] === 'error')
+    if (!parts.length) return
+    files.current.clear(); setProgress({ loaded: 0, total: 0 })
+    for (const p of parts) partStatus[p] = 'loading'
+    setStatus({ ...partStatus }); setError(null)
+    send({ type: 'load', parts })
+  }, [direction])
+
+  const translate = useCallback((text: string, dir: Direction) => new Promise<string>((resolve, reject) => {
     const id = ++nextId.current
     pending.current.set(id, { resolve, reject })
-    send({ type: 'translate', id, text, direction })
+    send({ type: 'translate', id, text, direction: dir })
   }), [])
 
-  return { status, progress, error, load, translate }
+  return {
+    status: combine(needed, status),
+    /** MB still to download for this direction (0 when ready). */
+    missingMB: missing.reduce((s, p) => s + PART_MB[p], 0),
+    /** True when this direction needs the Ido part on top of a base part that is already loaded. */
+    onlyIdoMissing: missing.length === 1 && missing[0] === 'ido',
+    progress, error, load, translate,
+  }
 }

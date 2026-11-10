@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeftRight, Database, Book, Info, Globe } from 'lucide-react'
 import TextTranslator from './components/TextTranslator'
 import DictionariesDialog from './components/DictionariesDialog'
 import RepoVersions from './components/RepoVersions'
 import Footer from './components/Footer'
 import SeoContent from './components/SeoContent'
+import { LANG_NAME, PARTNERS, isPartner, type Direction, type Partner } from './langs'
 
-type LanguageDirection = 'ido-epo' | 'epo-ido'
+const PARTNER_KEY = 'translator.partner'
 
 // About pages exist in io/en/eo; pick by browser language (English by default)
 // so the header link and the footer link always agree.
@@ -17,12 +18,40 @@ const pickAboutLang = (): 'io' | 'en' | 'eo' => {
 const ABOUT_LANG = pickAboutLang()
 
 const App = () => {
-  const [direction, setDirection] = useState<LanguageDirection>('ido-epo')
+  // Ido is always on one side; `partner` is the other language. Defaults render on the
+  // server; a saved partner is applied after mount so hydration matches.
+  const [partner, setPartner] = useState<Partner>('epo')
+  const [idoFirst, setIdoFirst] = useState(true)
   const [isDictionariesOpen, setIsDictionariesOpen] = useState(false)
+  const direction: Direction = idoFirst ? `ido-${partner}` : `${partner}-ido`
 
-  const handleSwapDirection = () => {
-    setDirection(direction === 'ido-epo' ? 'epo-ido' : 'ido-epo')
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(PARTNER_KEY)
+      if (saved && isPartner(saved)) setPartner(saved)
+    } catch { /* storage disabled */ }
+  }, [])
+
+  const choosePartner = (p: Partner) => {
+    setPartner(p)
+    try { window.localStorage.setItem(PARTNER_KEY, p) } catch { /* storage disabled */ }
   }
+
+  const partnerSelect = (
+    <select
+      value={partner}
+      onChange={(e) => choosePartner(e.target.value as Partner)}
+      className="bg-transparent text-white font-medium rounded-md px-1 py-0.5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer"
+      aria-label={idoFirst ? 'Target language' : 'Source language'}
+    >
+      {PARTNERS.map((p) => (
+        <option key={p} value={p} className="text-black">
+          {LANG_NAME[p]}{p === 'epo' ? '' : ' (β)'}
+        </option>
+      ))}
+    </select>
+  )
+  const ido = <span className="text-white font-medium">Ido</span>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1f3f7a] via-[#1f3f7a] to-[#1f7a3a]">
@@ -64,19 +93,15 @@ const App = () => {
         {/* Language Direction Selector */}
         <div className="flex justify-center items-center gap-4 mb-5 sm:mb-8">
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-5 py-2 sm:px-6 sm:py-3 flex items-center gap-4">
-            <span className="text-white font-medium">
-              {direction === 'ido-epo' ? 'Ido' : 'Esperanto'}
-            </span>
+            {idoFirst ? ido : partnerSelect}
             <button
-              onClick={handleSwapDirection}
+              onClick={() => setIdoFirst((v) => !v)}
               className="p-2 hover:bg-white/10 rounded-full transition-colors"
               aria-label="Swap translation direction"
             >
               <ArrowLeftRight className="w-5 h-5 text-white" />
             </button>
-            <span className="text-white font-medium">
-              {direction === 'ido-epo' ? 'Esperanto' : 'Ido'}
-            </span>
+            {idoFirst ? partnerSelect : ido}
           </div>
         </div>
 

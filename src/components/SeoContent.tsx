@@ -36,10 +36,11 @@ const SeoContent = () => (
         NLLB-200 (600M parameters) fine-tuned for Ido
       </a>
       , trained on Ido–Esperanto sentence pairs. It runs on your device after a one-time download
-      of about 560 MB, which your browser keeps for later visits, so the text you translate is
-      never sent to a server. On a held-out test set of 1,000 sentences it scores chrF 73
+      (about 610 MB to translate from Ido, about 990 MB to translate into Ido), which your browser
+      keeps for later visits, so the text you translate is never sent to a server. On a held-out test set of 1,000 sentences it scores chrF 73
       against 65 for the rule-based engine. It is usually more fluent, but it can change or
-      invent words, so check names, numbers and rare terms. You can also try it as a{' '}
+      invent words, so check names, numbers and rare terms. It can also translate between Ido and
+      English, Spanish, French or German; these pairs are experimental. You can also try it as a{' '}
       <a className="underline" href="https://huggingface.co/spaces/komapc/ido-epo-translator">
         standalone demo
       </a>
@@ -122,7 +123,7 @@ const SeoContent = () => (
         <dt className="font-semibold text-white">Which engine should I use?</dt>
         <dd>
           Neural β for natural-sounding everyday sentences; Apertium for predictable,
-          word-by-word output, for long texts, or when you cannot download the 560 MB model.
+          word-by-word output, for long texts, or when you cannot download the neural model (610–990 MB).
         </dd>
       </div>
       <div>
