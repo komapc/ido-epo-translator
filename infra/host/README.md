@@ -54,8 +54,8 @@ until a certificate exists.
 - the file is mode 600, owned by root;
 - it is never in git.
 
-To move it, copy the value from the old host's file to the new one. On the original EC2 host it is
-in the systemd drop-in `/etc/systemd/system/webhook-server.service.d/secret.conf` instead. To
+To move it, copy the value from the old host's file to the new one. On the original EC2 host (retired 2026-11) it
+was in the systemd drop-in `/etc/systemd/system/webhook-server.service.d/secret.conf` instead. To
 rotate it, generate a new value, write it on the host, and `wrangler secret put` the same value.
 
 After any change to the file, run `sudo systemctl restart webhook-server`. `reload` keeps the old

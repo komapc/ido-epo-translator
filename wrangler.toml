@@ -9,7 +9,7 @@ binding = "ASSETS"
 run_worker_first = true
 
 # Production variables (non-secret)
-# Backend deployed to EC2 (using domain name to avoid DNS issues)
+# Backend: whatever host apy.lipu.dev points at (see infra/host/README.md)
 [vars]
 APY_SERVER_URL = "https://apy.lipu.dev"
 REBUILD_WEBHOOK_URL = "https://apy.lipu.dev/rebuild"
