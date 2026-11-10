@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://tradukilo.lipu.dev/</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-10</lastmod>
   </url>
   <url>
     <loc>https://tradukilo.lipu.dev/about-io</loc>
@@ -18,10 +18,26 @@
   </url>
   <url>
     <loc>https://tradukilo.lipu.dev/ido-epo</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-10</lastmod>
   </url>
   <url>
     <loc>https://tradukilo.lipu.dev/epo-ido</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://tradukilo.lipu.dev/ru/ido-epo</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://tradukilo.lipu.dev/eo/ido-epo</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://tradukilo.lipu.dev/ru/epo-ido</loc>
+    <lastmod>2026-11-10</lastmod>
+  </url>
+  <url>
+    <loc>https://tradukilo.lipu.dev/io/epo-ido</loc>
+    <lastmod>2026-11-10</lastmod>
   </url>
 </urlset>
