@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Loader2, Copy, CheckCircle, Shuffle, Download, HelpCircle } from 'lucide-react'
 import HistoryPanel from './HistoryPanel'
 import { useTranslationHistory, type HistoryEntry } from '../hooks/useTranslationHistory'
-import { useNeuralTranslator, isNeuralModelCached } from '../neural/useNeuralTranslator'
-import { NEURAL_MODEL_MB } from '../neural/protocol'
+import { useNeuralTranslator, cachedParts } from '../neural/useNeuralTranslator'
+import { PART_MB, partsFor } from '../neural/protocol'
+import { LANG_NAME, WIKI, hasApertium, splitDirection, type Direction } from '../langs'
 import CompareView, { type Vote } from './CompareView'
 
 type Engine = 'apertium' | 'neural'
 type Mode = Engine | 'both'
-type Direction = 'ido-epo' | 'epo-ido'
 const ENGINE_KEY = 'translator.engine'
 const MODES: readonly (readonly [Mode, string])[] = [['apertium', 'Apertium (rules)'], ['neural', 'Neural β'], ['both', 'Compare both']]
 const enginesFor = (m: Mode): Engine[] => (m === 'both' ? ['apertium', 'neural'] : [m])
@@ -26,7 +26,7 @@ const answers = (r: EngineResult | undefined, q: TranslateRequest | null): r is 
 const gtag = (...a: unknown[]) => (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.(...a)
 
 interface TextTranslatorProps {
-  direction: 'ido-epo' | 'epo-ido'
+  direction: Direction
 }
 
 const TextTranslator = ({ direction }: TextTranslatorProps) => {
@@ -43,30 +43,41 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const { history, addEntry, removeEntry, clearAll } = useTranslationHistory()
   // 'apertium' on first render so SSR markup and hydration match; the saved choice is applied after mount.
   const [mode, setMode] = useState<Mode>('apertium')
-  const neural = useNeuralTranslator()
+  const neural = useNeuralTranslator(direction)
+  const [srcLang, tgtLang] = splitDirection(direction)
+  const apertiumOK = hasApertium(direction)
+  // Apertium only covers Ido <-> Esperanto; other pairs are neural-only. The saved
+  // choice is kept and applies again when the user returns to Esperanto.
+  const effMode: Mode = apertiumOK ? mode : 'neural'
 
   useEffect(() => {
     let saved: string | null = null
     try { saved = window.localStorage.getItem(ENGINE_KEY) } catch { /* storage disabled */ }
-    if (saved !== 'neural' && saved !== 'both') return
-    setMode(saved)
-    // A returning visitor with the model already cached gets it loaded without asking again.
-    isNeuralModelCached().then((cached) => { if (cached) neural.load() })
-  }, [neural.load])
+    if (saved === 'neural' || saved === 'both') setMode(saved)
+  }, [])
+
+  // A returning visitor with the needed model parts already cached gets them loaded
+  // without asking again; anything not cached waits for a click on Download.
+  useEffect(() => {
+    if (effMode === 'apertium' || neural.status !== 'idle') return
+    cachedParts().then((cached) => {
+      if (partsFor(direction).every((p) => cached.includes(p))) neural.load()
+    })
+  }, [effMode, direction, neural.status, neural.load])
 
   const chooseMode = (m: Mode) => {
     setMode(m)
     try { window.localStorage.setItem(ENGINE_KEY, m) } catch { /* storage disabled */ }
   }
   const neuralReady = neural.status === 'ready'
-  const neuralBlocked = mode === 'neural' && !neuralReady
-  const busy = enginesFor(mode).some((e) => inflight[e])
+  const neuralBlocked = effMode === 'neural' && !neuralReady
+  const busy = enginesFor(effMode).some((e) => inflight[e])
 
   // The current request, if it belongs to the direction on screen.
   const current = request && request.direction === direction ? request : null
   const shown = (e: Engine) => (answers(results[e], current) ? results[e] : undefined)
-  const outputEngine: Engine = mode === 'neural' ? 'neural' : 'apertium'
-  const outputText = mode === 'both' ? '' : shown(mode)?.text ?? ''
+  const outputEngine: Engine = effMode === 'neural' ? 'neural' : 'apertium'
+  const outputText = effMode === 'both' ? '' : shown(effMode)?.text ?? ''
 
   // Replace exotic Unicode spaces with normal spaces; collapse runs of spaces (but preserve newlines)
   const normalizeDisplayWhitespace = (text: string): string => {
@@ -135,7 +146,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   const handleRandomArticle = async () => {
     setIsLoadingArticle(true)
     try {
-      const wiki = direction === 'ido-epo' ? 'io' : 'eo'
+      const wiki = WIKI[srcLang]
       const res = await fetch(`https://${wiki}.wikipedia.org/api/rest_v1/page/random/summary`)
       const data = await res.json()
       const text = [data.title, data.extract].filter(Boolean).join('\n\n')
@@ -181,7 +192,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     if (ok) {
       addEntry({ direction: q.direction, input: q.input, output: text, engine })
       // GA4 (only live after consent): direction, size and engine, never the text itself
-      gtag('event', 'translate', { direction: q.direction, chars: q.input.length, engine, mode })
+      gtag('event', 'translate', { direction: q.direction, chars: q.input.length, engine, mode: effMode })
     }
   }
 
@@ -191,13 +202,14 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   // while "Compare both" is waiting for it.
   useEffect(() => {
     if (!current) return
-    for (const e of enginesFor(mode)) {
+    for (const e of enginesFor(effMode)) {
+      if (e === 'apertium' && !hasApertium(current.direction)) continue
       if (inflight[e] || answers(results[e], current)) continue
       if (e === 'neural' && !neuralReady) continue
       run(e, current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, mode, neuralReady, inflight, results])
+  }, [current, effMode, neuralReady, inflight, results])
 
   const handleTranslate = () => {
     if (!inputText.trim()) return
@@ -222,7 +234,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     setInputText(entry.input)
     setResults((r) => ({ ...r, [engine]: { ...q, text: entry.output, ok: true } }))
     setRequest(q)
-    if (mode !== 'both' && mode !== engine) chooseMode(engine)
+    if (apertiumOK && mode !== 'both' && mode !== engine) chooseMode(engine)
   }
 
   return (
@@ -232,13 +244,13 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-white">
-            {direction === 'ido-epo' ? 'Ido' : 'Esperanto'} Input
+            {LANG_NAME[srcLang]} Input
           </h2>
           <button
             onClick={handleRandomArticle}
             disabled={isLoadingArticle}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-all"
-            title={`Load random ${direction === 'ido-epo' ? 'Ido' : 'Esperanto'} Wikipedia article`}
+            title={`Load random ${LANG_NAME[srcLang]} Wikipedia article`}
           >
             {isLoadingArticle ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -258,26 +270,31 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               if (!busy && inputText.trim() && !neuralBlocked) handleTranslate()
             }
           }}
-          placeholder={`Enter ${direction === 'ido-epo' ? 'Ido' : 'Esperanto'} text here...`}
+          placeholder={`Enter ${LANG_NAME[srcLang]} text here...`}
           className="w-full h-36 sm:h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
           data-gramm="false"
           aria-label="Input text to translate"
         />
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="radiogroup" aria-label="Translation engine">
           <span className="text-white/70">Engine:</span>
-          {MODES.map(([value, label]) => (
+          {MODES.map(([value, label]) => {
+            const off = !apertiumOK && value !== 'neural'
+            return (
             <button
               key={value}
               role="radio"
-              aria-checked={mode === value}
+              aria-checked={effMode === value}
+              disabled={off}
               onClick={() => chooseMode(value)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                mode === value ? 'bg-white/25 text-white font-medium' : 'bg-white/5 text-white/70 hover:bg-white/15'
+              title={off ? 'Apertium covers Ido ↔ Esperanto only' : undefined}
+              className={`px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                effMode === value ? 'bg-white/25 text-white font-medium' : 'bg-white/5 text-white/70 hover:bg-white/15'
               }`}
             >
               {label}
             </button>
-          ))}
+            )
+          })}
           <button
             onClick={() => setShowEngineHelp((v) => !v)}
             aria-expanded={showEngineHelp}
@@ -297,10 +314,12 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </p>
             <p>
               <b>Neural β</b> is NLLB-200 (600M), fine-tuned on Ido–Esperanto sentence pairs. It runs entirely in your
-              browser after a one-time download of about {NEURAL_MODEL_MB} MB, so your text never leaves your device.
-              On our held-out test set it scores chrF 73 against 65 for Apertium. It works
-              best on everyday sentences; it can make up or change words, so check names, numbers and rare terms.
-              It translates one sentence at a time, and the first run after loading is slower.
+              browser after a one-time download ({PART_MB.base} MB from Ido, plus {PART_MB.ido} MB to write Ido),
+              so your text never leaves your device. For Ido ↔ Esperanto, on our held-out test set it scores chrF 73
+              against 65 for Apertium. Ido ↔ English, Spanish, French and German are <b>experimental</b>: into Ido
+              they go through Esperanto. It works best on everyday sentences; it can make up or change words, so
+              check names, numbers and rare terms. It translates one sentence at a time, and the first run after
+              loading is slower.
             </p>
             <p>
               <b>Compare both</b> shows the two translations sentence by sentence, with the words that differ
@@ -308,13 +327,18 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </p>
             <p>
               <a className="underline" href="/about-en#neural">More about the neural engine</a> ·{' '}
-              <a className="underline" href="https://huggingface.co/komapc/nllb-ido-epo-600m" target="_blank" rel="noopener noreferrer">
+              <a className="underline" href="https://huggingface.co/komapc/nllb-ido-multi-onnx" target="_blank" rel="noopener noreferrer">
                 model card
               </a>
             </p>
           </div>
         )}
-        {mode !== 'apertium' && !neuralReady && (
+        {!apertiumOK && (
+          <p className="mt-3 text-sm text-white/70">
+            {LANG_NAME[srcLang]} → {LANG_NAME[tgtLang]} is experimental and neural-only: Apertium covers Ido ↔ Esperanto.
+          </p>
+        )}
+        {effMode !== 'apertium' && !neuralReady && (
           <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/15 text-sm text-white/85">
             {neural.status === 'loading' ? (
               <>
@@ -334,7 +358,9 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               <>
                 <p className="mb-2">
                   The neural translator (NLLB-200 fine-tuned for Ido) runs <b>in your browser</b>, so your text is not
-                  sent to any server. It needs a one-time download of about {NEURAL_MODEL_MB} MB, which your browser
+                  sent to any server. {neural.onlyIdoMissing
+                    ? <>Writing Ido needs one more part of the model, about {neural.missingMB} MB,</>
+                    : <>It needs a one-time download of about {neural.missingMB} MB,</>} which your browser
                   then caches. It is often more fluent than Apertium, but it can make up words, so check names and numbers.{' '}
                   <a className="underline" href="/about-en#neural">Learn more</a>
                 </p>
@@ -344,7 +370,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
                   className="flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg transition-all"
                 >
                   <Download className="w-4 h-4" />
-                  Download model (~{NEURAL_MODEL_MB} MB)
+                  Download model (~{neural.missingMB} MB)
                 </button>
               </>
             )}
@@ -373,9 +399,9 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold text-white">
-              {direction === 'ido-epo' ? 'Esperanto' : 'Ido'} Translation
+              {LANG_NAME[tgtLang]} Translation
             </h2>
-            {mode !== 'both' && busy && <Loader2 className="w-5 h-5 animate-spin text-white/70" />}
+            {effMode !== 'both' && busy && <Loader2 className="w-5 h-5 animate-spin text-white/70" />}
             {outputText && outputEngine === 'neural' && (
               <div
                 className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200"
@@ -399,7 +425,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               </div>
             )}
           </div>
-          {outputText && mode !== 'both' && (
+          {outputText && effMode !== 'both' && (
             <button
               onClick={handleCopy}
               className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
@@ -413,7 +439,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </button>
           )}
         </div>
-        {mode === 'both' ? (
+        {effMode === 'both' ? (
           <CompareView
             apertium={shown('apertium')?.ok ? normalizeDisplayWhitespace(shown('apertium')!.text) : shown('apertium')?.text ?? null}
             neural={shown('neural')?.text ?? null}

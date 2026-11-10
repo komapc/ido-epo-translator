@@ -13,11 +13,18 @@ Ido–Esperanto sentence pairs. Training and evaluation live in [komapc/ido-epo-
 
 - **Runs client-side.** `src/neural/nllbWorker.ts` is a module Web Worker that loads
   [transformers.js](https://huggingface.co/docs/transformers.js) 4.3.1 from jsDelivr and the browser build
-  [komapc/nllb-ido-epo-600m-onnx](https://huggingface.co/komapc/nllb-ido-epo-600m-onnx) (vocab pruned 256k→72k,
-  int8, ~560 MB) from Hugging Face. Text never reaches our server or the APy backend.
+  [komapc/nllb-ido-multi-onnx](https://huggingface.co/komapc/nllb-ido-multi-onnx) from Hugging Face. Text never
+  reaches our server or the APy backend.
+- **Two parts, one encoder.** The build has one encoder and two decoders (vocab pruned to 79k, int8): `onnx/`
+  (~612 MB: encoder + base NLLB decoder, writes epo/eng/spa/fra/deu) and `onnx_ido/` (~375 MB: the fine-tuned
+  decoder that writes Ido). `onnx_ido/` ships a placeholder encoder; the worker swaps in the base encoder
+  session. Writing Ido from English/Spanish/French/German pivots through Esperanto. Pairs other than
+  Ido↔Esperanto are neural-only and experimental (the language menu next to the swap button).
+  `VITE_NEURAL_REMOTE_HOST` points transformers.js at a local mirror for testing.
 - **Download is opt-in.** Nothing is fetched until the user clicks *Download model*. The files go to the
-  `transformers-cache` Cache Storage, and returning visitors with the engine set to neural (`translator.engine`
-  in localStorage) get the model loaded automatically. `public/sw.js` ignores cross-origin requests, so the
+  `transformers-cache` Cache Storage. When the neural engine is in use (`translator.engine` in localStorage, or a
+  neural-only pair) and every part the direction needs is already cached, it loads without asking. The old
+  `nllb-ido-epo-600m-onnx` files are deleted from the cache once the new base part loads. `public/sw.js` ignores cross-origin requests, so the
   service worker does not cache the model a second time.
 - **Sentence by sentence.** The model was trained on short sentences, so input is split on sentence punctuation
   and translated one sentence at a time (greedy decoding, `max_new_tokens: 256`).

@@ -1,8 +1,9 @@
+import type { Direction } from '../langs'
 import { useEffect, useState } from 'react'
 
 export interface HistoryEntry {
     timestamp: number
-    direction: 'ido-epo' | 'epo-ido'
+    direction: Direction
     input: string
     output: string
     engine?: 'apertium' | 'neural' // missing in entries saved before the neural engine
