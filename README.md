@@ -40,13 +40,13 @@ Cloudflare Pages + _worker.js
   │  /api/admin/pull-repo, /api/admin/build-repo
   │
   ▼
-EC2 eu-west-1 (ubuntu@ec2-52-211-137-158.eu-west-1.compute.amazonaws.com)
+apy.lipu.dev: GCP e2-micro, us-central1 (any Ubuntu 24.04 host works, see infra/host/README.md)
   ├── APy server          — port 2737  (systemd: apy-server.service)
   └── Webhook server      — port 8081  (systemd: webhook-server.service)
         /rebuild, /pull-repo, /build-repo, /status
 ```
 
-Apertium language data on EC2 (built from source, installed to `/usr/local/share/apertium/`):
+Apertium language data on the host (built from source, installed to `/usr/local/share/apertium/`):
 - `komapc/apertium-ido` — Ido morphology
 - `apertium/apertium-epo` — Esperanto morphology
 - `komapc/apertium-ido-epo` — bilingual transfer rules + mode files
@@ -105,7 +105,8 @@ src/                              React frontend
 public/                           Static assets copied to dist/
   yandex_f2140f420535e2c3.html    Yandex Webmaster verification (tradukilo.lipu.dev) — keep
 scripts/
-  ec2-update.sh                   SSH helper: pull + rebuild a repo on EC2
+  host-update.sh                  SSH helper: pull + rebuild a repo on the host
+infra/host/                       Cloud-agnostic provisioning + move runbook
 .github/workflows/
   deploy-worker.yml               CI: build + deploy to Cloudflare Pages
 apy-server/
