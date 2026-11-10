@@ -20,4 +20,7 @@ certbot certonly --webroot -w /var/www/certbot -d "$FQDN" \
 install -m 644 "$REPO_ROOT/infra/nginx/apy-lipu-dev.conf" /etc/nginx/sites-available/apy-lipu-dev
 nginx -t && systemctl reload nginx
 systemctl list-timers certbot.timer --no-pager
-curl -fsS "https://$FQDN/listPairs" && echo && echo "OK: TLS serving"
+# Test via loopback: right after a reload, and on clouds without hairpin NAT,
+# connecting to our own public IP can fail even though outside clients work.
+sleep 2
+curl -fsS --resolve "$FQDN:443:127.0.0.1" "https://$FQDN/listPairs" && echo && echo "OK: TLS serving"
