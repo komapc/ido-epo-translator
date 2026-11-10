@@ -6,7 +6,8 @@ const publicDir = __dirname;
 
 console.log('--- Generating Sitemap for Translator ---');
 
-// The home page and the static /about-{io,en,eo}, /ido-epo, /epo-ido pages are listed. The ?q=<word> result pages are noindex'd in
+// The home page and the static /about-{io,en,eo}, /ido-epo, /epo-ido (plus their
+// /ru/, /eo/, /io/ versions) pages are listed. The ?q=<word> result pages are noindex'd in
 // _worker.js: they are thin single-word duplicates of the vortaro dictionary
 // pages, Bing dropped them from its index (150 -> 2 pages), and ?q= accepts
 // arbitrary text, so listing/indexing them invites index bloat and reflected
@@ -28,6 +29,8 @@ const lastmod = (files) => {
 const pages = [
   { loc: '/', files: ['index.html', 'src'] },
   ...['about-io', 'about-en', 'about-eo', 'ido-epo', 'epo-ido'].map(l => ({ loc: `/${l}`, files: [`public/${l}.html`] })),
+  // Localized direction pages (hreflang-linked to /ido-epo and /epo-ido).
+  ...['ru/ido-epo', 'eo/ido-epo', 'ru/epo-ido', 'io/epo-ido'].map(l => ({ loc: `/${l}`, files: [`public/${l}.html`] })),
 ];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
