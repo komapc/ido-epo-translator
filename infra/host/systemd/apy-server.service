@@ -1,0 +1,13 @@
+[Unit]
+Description=Apertium APy (ido<->epo translation API on 127.0.0.1:2737)
+After=network.target
+
+[Service]
+User=@SVC_USER@
+WorkingDirectory=/opt/apertium-apy
+ExecStart=/opt/apertium-apy/.venv/bin/python /opt/apertium-apy/apy.py -p 2737 -j1 /usr/local/share/apertium/modes/
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

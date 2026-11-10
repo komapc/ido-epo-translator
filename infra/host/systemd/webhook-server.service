@@ -1,0 +1,17 @@
+[Unit]
+Description=Rebuild/pull/build webhook for the Cloudflare worker (127.0.0.1:8081 via nginx)
+After=network.target
+
+[Service]
+User=@SVC_USER@
+WorkingDirectory=/opt
+ExecStart=/usr/bin/node /opt/webhook-server.js
+Environment=PORT=8081
+# REBUILD_SHARED_SECRET lives only here (mode 600, never in git).
+# An EnvironmentFile change needs `systemctl restart`, not reload.
+EnvironmentFile=/etc/ido-translator/secrets.env
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
