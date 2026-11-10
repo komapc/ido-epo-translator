@@ -35,6 +35,8 @@ swapon --show
 
 log "apt: base packages + Apertium nightly repo"
 export DEBIAN_FRONTEND=noninteractive
+command -v cloud-init >/dev/null && cloud-init status --wait >/dev/null || true
+echo 'DPkg::Lock::Timeout "600";' > /etc/apt/apt.conf.d/99lock-timeout
 apt-get update -q
 apt-get install -y -q curl ca-certificates git build-essential autoconf automake \
   libtool pkg-config python3 python3-venv nodejs nginx certbot ufw
@@ -69,7 +71,7 @@ install -o "$SVC_USER" -g "$SVC_USER" -m 755 "$REPO_ROOT/apy-server/rebuild-self
 install -o "$SVC_USER" -g "$SVC_USER" -m 755 "$REPO_ROOT/apy-server/build-repo.sh" /opt/apertium/build-repo.sh
 install -o "$SVC_USER" -g "$SVC_USER" -m 755 "$REPO_ROOT/apy-server/pull-repo.sh"  /opt/apertium/pull-repo.sh
 install -o root -g root -m 644 "$REPO_ROOT/webhook-server-no-docker.js" /opt/webhook-server.js
-install -o "$SVC_USER" -g "$SVC_USER" -m 644 /dev/null /var/log/apertium-rebuild.log 2>/dev/null || true
+[ -f /var/log/apertium-rebuild.log ] || touch /var/log/apertium-rebuild.log
 chown "$SVC_USER:$SVC_USER" /var/log/apertium-rebuild.log
 
 log "APy @ ${APY_COMMIT:0:8} -> /opt/apertium-apy (venv, pinned deps)"
