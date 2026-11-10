@@ -1,0 +1,7 @@
+# Pinned to what the original EC2 host ran (2026-11). APy itself is pinned by
+# commit in provision.sh (APY_COMMIT).
+tornado==6.5.2
+apertium-streamparser==5.0.2
+chardet==5.2.0
+commentjson==0.9.0
+lxml==6.0.2
