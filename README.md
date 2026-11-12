@@ -16,8 +16,8 @@ Ido–Esperanto sentence pairs. Training and evaluation live in [komapc/ido-epo-
   [komapc/nllb-ido-multi-onnx](https://huggingface.co/komapc/nllb-ido-multi-onnx) from Hugging Face. Text never
   reaches our server or the APy backend.
 - **Two parts, one encoder.** The build has one encoder and two decoders (vocab pruned to 79k, int8): `onnx/`
-  (~612 MB: encoder + base NLLB decoder, writes epo/eng/spa/fra/deu) and `onnx_ido/` (~375 MB: the fine-tuned
-  decoder that writes Ido). `onnx_ido/` ships a placeholder encoder; the worker swaps in the base encoder
+  (~612 MB: encoder + base NLLB decoder, writes epo/eng/spa/fra/deu) and `onnx_ido_v2/` (~375 MB: the fine-tuned
+  decoder that writes Ido, v2 retrained with back-translation). `onnx_ido_v2/` ships a placeholder encoder; the worker swaps in the base encoder
   session. Writing Ido from English/Spanish/French/German pivots through Esperanto. Pairs other than
   Ido↔Esperanto are neural-only and experimental (the language menu next to the swap button).
   `VITE_NEURAL_REMOTE_HOST` points transformers.js at a local mirror for testing.

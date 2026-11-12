@@ -4,9 +4,17 @@ import type { Direction } from '../langs'
 export const NEURAL_MODEL_ID = 'komapc/nllb-ido-multi-onnx'
 
 /**
+ * Folder of the Ido decoder. A new version gets a new folder, because transformers.js caches
+ * files by URL and would otherwise keep serving the old decoder to returning visitors.
+ */
+export const IDO_SUBFOLDER = 'onnx_ido_v2'
+/** Earlier Ido decoder folders, deleted from the cache once the new one is in use. */
+export const OLD_IDO_SUBFOLDERS = ['onnx_ido']
+
+/**
  * - base: the encoder and the decoder that writes Esperanto, English, Spanish, French
  *   and German (onnx/).
- * - ido: the decoder that writes Ido (onnx_ido/). It reuses the base encoder.
+ * - ido: the decoder that writes Ido (IDO_SUBFOLDER). It reuses the base encoder.
  */
 export type Part = 'base' | 'ido'
 export const PARTS: readonly Part[] = ['base', 'ido']
