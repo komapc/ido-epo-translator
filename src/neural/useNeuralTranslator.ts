@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Direction } from '../langs'
-import { NEURAL_MODEL_ID, PART_MB, PARTS, partsFor, type NeuralRequest, type NeuralResponse, type Part } from './protocol'
+import { IDO_SUBFOLDER, NEURAL_MODEL_ID, OLD_IDO_SUBFOLDERS, PART_MB, PARTS, partsFor, type NeuralRequest, type NeuralResponse, type Part } from './protocol'
 
 export type NeuralStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -20,8 +20,8 @@ function getWorker(): Worker {
 const send = (m: NeuralRequest) => getWorker().postMessage(m)
 
 const CACHE = 'transformers-cache'
-// Cache keys are the download URLs, e.g. …/nllb-ido-multi-onnx/resolve/main/onnx_ido/decoder_model_merged_quantized.onnx
-const PART_FILE: Record<Part, string> = { base: '/onnx/decoder_model_merged_quantized', ido: '/onnx_ido/decoder_model_merged_quantized' }
+// Cache keys are the download URLs, e.g. …/nllb-ido-multi-onnx/resolve/main/onnx_ido_v2/decoder_model_merged_quantized.onnx
+const PART_FILE: Record<Part, string> = { base: '/onnx/decoder_model_merged_quantized', ido: `/${IDO_SUBFOLDER}/decoder_model_merged_quantized` }
 
 /** Parts transformers.js already cached (a returning visitor), so loading them costs no download. */
 export async function cachedParts(): Promise<Part[]> {
@@ -34,12 +34,16 @@ export async function cachedParts(): Promise<Part[]> {
   }
 }
 
-/** Drop the files of the previous Ido–Esperanto-only model (~560 MB) once the new one works. */
+/**
+ * Drop superseded files once the base part works: the previous Ido–Esperanto-only model (~560 MB)
+ * and earlier Ido decoders (~375 MB each).
+ */
 async function dropOldModel() {
   try {
     if (typeof caches === 'undefined' || !(await caches.keys()).includes(CACHE)) return
     const cache = await caches.open(CACHE)
-    for (const r of await cache.keys()) if (r.url.includes('/komapc/nllb-ido-epo-600m-onnx/')) await cache.delete(r)
+    const old = ['/komapc/nllb-ido-epo-600m-onnx/', ...OLD_IDO_SUBFOLDERS.map((f) => `/${NEURAL_MODEL_ID}/resolve/main/${f}/`)]
+    for (const r of await cache.keys()) if (old.some((o) => r.url.includes(o))) await cache.delete(r)
   } catch { /* best effort */ }
 }
 

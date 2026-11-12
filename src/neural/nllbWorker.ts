@@ -6,13 +6,13 @@
 // comes in two parts, each downloaded only when needed and then cached by
 // transformers.js (Cache API):
 // - base (onnx/, ~612 MB): the encoder and the decoder that writes every language but Ido;
-// - ido (onnx_ido/, ~375 MB): the decoder that writes Ido. transformers.js loads it with
+// - ido (onnx_ido_v2/, ~375 MB): the decoder that writes Ido. transformers.js loads it with
 //   a tiny placeholder encoder, which is swapped for the real base encoder before use.
 // transformers.js itself comes from a pinned CDN build rather than npm, so it
 // doesn't add ~1 MB of JS and wasm glue to the site bundle for a feature most
 // visitors never open.
 import type { NeuralRequest, NeuralResponse, Part } from './protocol'
-import { NEURAL_MODEL_ID, partsFor } from './protocol'
+import { IDO_SUBFOLDER, NEURAL_MODEL_ID, partsFor } from './protocol'
 import { NLLB, splitDirection, type Lang } from '../langs'
 import { splitSentences } from '../compare/compare'
 
@@ -57,9 +57,9 @@ function loadPart(part: Part): Promise<void> {
     } else {
       await loadPart('base')
       const m: Seq2Seq = await T.AutoModelForSeq2SeqLM.from_pretrained(NEURAL_MODEL_ID, {
-        dtype: 'q8', device: 'wasm', subfolder: 'onnx_ido', progress_callback: progressFor('ido'),
+        dtype: 'q8', device: 'wasm', subfolder: IDO_SUBFOLDER, progress_callback: progressFor('ido'),
       })
-      // onnx_ido/ ships a placeholder encoder that outputs zeros: share the real one
+      // The Ido folder ships a placeholder encoder that outputs zeros: share the real one
       // before this part is reported ready, so the placeholder is never used.
       await m.sessions.model.release?.()
       m.sessions.model = models.base!.sessions.model
