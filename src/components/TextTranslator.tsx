@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, Copy, CheckCircle, Shuffle, Download, HelpCircle } from 'lucide-react'
+import { Loader2, Copy, CheckCircle, Shuffle, Download, HelpCircle, Server } from 'lucide-react'
 import HistoryPanel from './HistoryPanel'
 import { useTranslationHistory, type HistoryEntry } from '../hooks/useTranslationHistory'
 import { useNeuralTranslator, cachedParts } from '../neural/useNeuralTranslator'
@@ -64,6 +64,11 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       if (partsFor(direction).every((p) => cached.includes(p))) neural.load()
     })
   }, [effMode, direction, neural.status, neural.load])
+
+  // Server mode was chosen (now or on an earlier visit): start the server while the user types.
+  useEffect(() => {
+    if (effMode !== 'apertium' && neural.backend === 'server') neural.wake()
+  }, [effMode, neural.backend, neural.wake])
 
   const chooseMode = (m: Mode) => {
     setMode(m)
@@ -165,7 +170,8 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         return { text: await neural.translate(q.input, q.direction), ok: true }
       } catch (error) {
         console.error('Neural translation error:', error)
-        return { text: 'Error: neural translation failed', ok: false }
+        const msg = neural.backend === 'server' && error instanceof Error ? error.message : 'neural translation failed'
+        return { text: `Error: ${msg}`, ok: false }
       }
     }
     try {
@@ -313,9 +319,11 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               predictable, and words it does not know are marked with <code>*</code>. It can sound stiff.
             </p>
             <p>
-              <b>Neural β</b> is NLLB-200 (600M), fine-tuned on Ido–Esperanto sentence pairs. It runs entirely in your
-              browser after a one-time download ({PART_MB.base} MB from Ido, plus {PART_MB.ido} MB to write Ido),
-              so your text never leaves your device. For Ido ↔ Esperanto, on our held-out test set it scores chrF 73
+              <b>Neural β</b> is NLLB-200 (600M), fine-tuned on Ido–Esperanto sentence pairs. By default it runs
+              entirely in your browser after a one-time download ({PART_MB.base} MB from Ido, plus {PART_MB.ido} MB
+              to write Ido), so your text never leaves your device. If you would rather not download it, you can
+              choose to run the same model on our server: your text is then sent to it for translation, and is not
+              stored or logged. For Ido ↔ Esperanto, on our held-out test set it scores chrF 73
               against 65 for Apertium. Ido ↔ English, Spanish, French and German are <b>experimental</b>: into Ido
               they go through Esperanto. It works best on everyday sentences; it can make up or change words, so
               check names, numbers and rare terms. It translates one sentence at a time, and the first run after
@@ -365,16 +373,37 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
                   <a className="underline" href="/about-en#neural">Learn more</a>
                 </p>
                 {neural.status === 'error' && <p className="mb-2 text-orange-300">Loading failed: {neural.error}</p>}
-                <button
-                  onClick={neural.load}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg transition-all"
-                >
-                  <Download className="w-4 h-4" />
-                  Download model (~{neural.missingMB} MB)
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={neural.load}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg transition-all"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download model (~{neural.missingMB} MB)
+                  </button>
+                  <button
+                    onClick={() => neural.setBackend('server')}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/15 border border-white/20 text-white rounded-lg transition-all"
+                  >
+                    <Server className="w-4 h-4" />
+                    Use our server instead
+                  </button>
+                </div>
+                <p className="mt-2 text-white/60">
+                  Our server runs the same model with no download. Your text is then sent to it (Google Cloud) for
+                  translation and is not stored or logged. After a quiet period it needs up to ~30 seconds to wake up.
+                </p>
               </>
             )}
           </div>
+        )}
+        {effMode !== 'apertium' && neural.backend === 'server' && (
+          <p className="mt-3 text-sm text-white/70">
+            {neural.waking
+              ? <><Loader2 className="inline w-4 h-4 animate-spin mr-1" />Waking up the neural server (up to ~30 s)…</>
+              : 'Neural β runs on our server: your text is sent to it for translation, not stored or logged.'}{' '}
+            <button className="underline" onClick={() => neural.setBackend('browser')}>Run it in my browser instead</button>
+          </p>
         )}
         <button
           onClick={handleTranslate}
@@ -386,7 +415,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
           {busy ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Translating...
+              {inflight.neural && neural.backend === 'server' && neural.waking ? 'Waking up the server…' : 'Translating...'}
             </>
           ) : (
             'Translate'
@@ -405,7 +434,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             {outputText && outputEngine === 'neural' && (
               <div
                 className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200"
-                title="Translated by the neural model in your browser"
+                title={neural.backend === 'server' ? 'Translated by the neural model on our server' : 'Translated by the neural model in your browser'}
               >
                 Neural β
               </div>

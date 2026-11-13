@@ -17,6 +17,10 @@ REBUILD_WEBHOOK_URL = "https://apy.lipu.dev/rebuild"
 # SECURITY: REBUILD_SHARED_SECRET must be set as a Cloudflare Worker secret, NOT in wrangler.toml
 # Set it using: echo "SECRET_VALUE" | npx wrangler secret put REBUILD_SHARED_SECRET
 
+# Server-side neural engine (neural-server/README.md): /api/neural/* needs the Pages secret
+# NEURAL_KEY (the service's SHARED_KEY) and returns 503 without it. NEURAL_URL overrides the
+# Cloud Run URL. Set with: npx wrangler pages secret put NEURAL_KEY --project-name ido-tradukilo
+
 # Note: To deploy to production (default environment), use: wrangler deploy --env=""
 # or just: wrangler deploy (will use default top-level config)
 

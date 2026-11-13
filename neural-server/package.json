@@ -1,0 +1,7 @@
+{
+  "name": "ido-neural-server",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node server.mjs" },
+  "dependencies": { "@huggingface/transformers": "4.3.1" }
+}

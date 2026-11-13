@@ -1,6 +1,6 @@
 # Ido-Esperanto Translator
 
-Machine translation between Ido and Esperanto, with two engines: rule-based [Apertium](https://apertium.org) (server) and a neural model (beta) that runs in the browser.
+Machine translation between Ido and Esperanto, with two engines: rule-based [Apertium](https://apertium.org) (server) and a neural model (beta) that runs in the browser, or, if the visitor chooses, on our server ([`neural-server/`](neural-server/README.md), Cloud Run, reached through the worker at `/api/neural/*`).
 
 **Live:** https://tradukilo.lipu.dev
 **Operations guide:** [RUNBOOK.md](RUNBOOK.md)

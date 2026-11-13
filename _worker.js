@@ -272,6 +272,38 @@ export default {
         }
       }
 
+      // Neural engine on the server (neural-server/, Cloud Run), for visitors who choose it
+      // instead of the in-browser download. The service needs NEURAL_KEY, which only this
+      // worker knows; fail closed without it. Text is forwarded, never logged.
+      if (subpath === '/neural/health' || subpath === '/neural/translate') {
+        const NEURAL_URL = (env.NEURAL_URL || 'https://neural-891951053659.us-central1.run.app').replace(/\/$/, '')
+        if (!env.NEURAL_KEY) return sendJson(503, { error: 'Server translation is not available' })
+        const origin = request.headers.get('Origin')
+        if (origin && new URL(origin).host !== url.host) return sendJson(403, { error: 'Forbidden' })
+        const headers = { 'x-neural-key': env.NEURAL_KEY }
+        try {
+          if (subpath === '/neural/health') {
+            if (request.method !== 'GET') return sendJson(405, { error: 'Method not allowed' })
+            // Answers once the model is loaded, so a cold start makes this wait ~30 s.
+            const res = await fetch(`${NEURAL_URL}/health`, { headers })
+            return sendJson(res.ok ? 200 : 503, { ok: res.ok })
+          }
+          if (request.method !== 'POST') return sendJson(405, { error: 'Method not allowed' })
+          const body = await request.text()
+          if (body.length > 8000) return sendJson(413, { error: 'Text too long' })
+          const res = await fetch(`${NEURAL_URL}/translate`, {
+            method: 'POST',
+            headers: { ...headers, 'content-type': 'application/json' },
+            body,
+          })
+          // The service answers JSON for every outcome; anything else is Cloud Run itself.
+          const data = await res.json().catch(() => ({ error: 'Server translation failed' }))
+          return sendJson(res.status, data)
+        } catch {
+          return sendJson(502, { error: 'Server translation failed' })
+        }
+      }
+
       if (request.method === 'POST' && subpath === '/translate') {
         try {
           const contentType = request.headers.get('content-type') || ''

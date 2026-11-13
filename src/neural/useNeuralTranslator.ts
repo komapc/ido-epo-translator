@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Direction } from '../langs'
+import { splitDirection, type Direction } from '../langs'
+import { splitSentences } from '../compare/compare'
 import { IDO_SUBFOLDER, NEURAL_MODEL_ID, OLD_IDO_SUBFOLDERS, PART_MB, PARTS, partsFor, type NeuralRequest, type NeuralResponse, type Part } from './protocol'
 
 export type NeuralStatus = 'idle' | 'loading' | 'ready' | 'error'
+/** Where the neural model runs: downloaded into the browser, or on our server (neural-server/). */
+export type NeuralBackend = 'browser' | 'server'
+const BACKEND_KEY = 'translator.neuralBackend'
 
 // One worker per page, created only when the user opts in. It is never created
 // during SSR/prerender or on a plain visit.
@@ -47,6 +51,38 @@ async function dropOldModel() {
   } catch { /* best effort */ }
 }
 
+/**
+ * Server mode: the same model and decoding behind /api/neural (the worker adds the key).
+ * One request per sentence, like the browser worker translates, so a long text does not
+ * hold the server's single slot and the output is identical.
+ */
+async function serverSentence(text: string, src: string, tgt: string): Promise<string> {
+  const res = await fetch('/api/neural/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, src, tgt }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (res.ok && typeof data.text === 'string') return data.text
+  throw new Error(
+    res.status === 429 && data.retry === 'tomorrow' ? 'The server has reached its daily limit. Try again tomorrow, or download the model to translate in your browser.'
+    : res.status === 429 ? 'The server is busy. Try again in a moment.'
+    : res.status === 413 ? 'A sentence is too long for the server (over 1,000 characters).'
+    : res.status === 503 ? 'Server translation is not available right now.'
+    : 'Server translation failed. Try again in a moment.')
+}
+
+async function serverTranslate(text: string, direction: Direction): Promise<string> {
+  const [src, tgt] = splitDirection(direction)
+  const lines: string[] = []
+  for (const line of text.split('\n')) {
+    const done: string[] = []
+    for (const s of splitSentences(line)) done.push(await serverSentence(s, src, tgt))
+    lines.push(done.join(' '))
+  }
+  return lines.join('\n')
+}
+
 const combine = (parts: Part[], st: Record<Part, NeuralStatus>): NeuralStatus =>
   parts.some((p) => st[p] === 'error') ? 'error'
   : parts.some((p) => st[p] === 'loading') ? 'loading'
@@ -60,6 +96,28 @@ export function useNeuralTranslator(direction: Direction) {
   const files = useRef(new Map<string, [number, number]>())
   const pending = useRef(new Map<number, { resolve: (s: string) => void; reject: (e: Error) => void }>())
   const nextId = useRef(0)
+  const [backend, setBackendState] = useState<NeuralBackend>('browser')
+  // True while the server is starting (cold start, up to ~30 s).
+  const [waking, setWaking] = useState(false)
+  const pinged = useRef(false)
+
+  // The saved choice is applied after mount, so SSR markup and hydration match.
+  useEffect(() => {
+    try { if (window.localStorage.getItem(BACKEND_KEY) === 'server') setBackendState('server') } catch { /* storage disabled */ }
+  }, [])
+
+  const setBackend = useCallback((b: NeuralBackend) => {
+    setBackendState(b)
+    try { window.localStorage.setItem(BACKEND_KEY, b) } catch { /* storage disabled */ }
+  }, [])
+
+  /** Start the server while the user is still typing. Only called once they chose server mode. */
+  const wake = useCallback(() => {
+    if (pinged.current) return
+    pinged.current = true
+    setWaking(true)
+    fetch('/api/neural/health').catch(() => {}).finally(() => setWaking(false))
+  }, [])
 
   useEffect(() => {
     const setPart = (p: Part, s: NeuralStatus) => { partStatus[p] = s; setStatus({ ...partStatus }) }
@@ -100,14 +158,19 @@ export function useNeuralTranslator(direction: Direction) {
     send({ type: 'load', parts })
   }, [direction])
 
-  const translate = useCallback((text: string, dir: Direction) => new Promise<string>((resolve, reject) => {
-    const id = ++nextId.current
-    pending.current.set(id, { resolve, reject })
-    send({ type: 'translate', id, text, direction: dir })
-  }), [])
+  const translate = useCallback((text: string, dir: Direction) => {
+    if (backend === 'server') return serverTranslate(text, dir)
+    return new Promise<string>((resolve, reject) => {
+      const id = ++nextId.current
+      pending.current.set(id, { resolve, reject })
+      send({ type: 'translate', id, text, direction: dir })
+    })
+  }, [backend])
 
   return {
-    status: combine(needed, status),
+    /** Server mode needs no download, so it is always ready. */
+    status: backend === 'server' ? 'ready' as const : combine(needed, status),
+    backend, setBackend, wake, waking,
     /** MB still to download for this direction (0 when ready). */
     missingMB: missing.reduce((s, p) => s + PART_MB[p], 0),
     /** True when this direction needs the Ido part on top of a base part that is already loaded. */
