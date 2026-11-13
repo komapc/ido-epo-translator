@@ -37,7 +37,9 @@ const SeoContent = () => (
       </a>
       , trained on Ido–Esperanto sentence pairs. It runs on your device after a one-time download
       (about 610 MB to translate from Ido, about 990 MB to translate into Ido), which your browser
-      keeps for later visits, so the text you translate is never sent to a server. On a held-out test set of 1,000 sentences it scores chrF 73
+      keeps for later visits, so the text you translate is never sent to a server. If you would rather
+      not download it, you can run the same model on our server instead: your text is then sent to it
+      for translation and is not stored or logged. On a held-out test set of 1,000 sentences it scores chrF 73
       against 65 for the rule-based engine. It is usually more fluent, but it can change or
       invent words, so check names, numbers and rare terms. It can also translate between Ido and
       English, Spanish, French or German; these pairs are experimental. You can also try it as a{' '}
@@ -116,7 +118,8 @@ const SeoContent = () => (
         <dd>
           With the rule-based engine, the text goes to our Apertium server to be translated.
           With the neural engine, translation happens in your browser and the text stays on
-          your device.
+          your device, unless you choose to run it on our server; then the text is sent there for
+          translation and is not stored or logged.
         </dd>
       </div>
       <div>
