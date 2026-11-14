@@ -33,7 +33,7 @@ Ido–Esperanto sentence pairs. Training and evaluation live in [komapc/ido-epo-
 - **Files:** `src/neural/protocol.ts` (worker messages, `NEURAL_MODEL_MB`), `nllbWorker.ts`,
   `useNeuralTranslator.ts` (lazy singleton worker + React hook), and the engine switch and help panel in
   `src/components/TextTranslator.tsx`.
-- **License:** the model is CC BY-NC 4.0 (training data includes Tatoeba, CC BY 2.0 FR).
+- **License:** the model is CC BY-NC 4.0, inherited from NLLB-200 (training data includes Tatoeba, CC BY 2.0 FR).
 
 ## Architecture
 
@@ -126,3 +126,7 @@ apy-server/
 - [komapc/apertium-ido](https://github.com/komapc/apertium-ido) — Ido monolingual dictionary
 - [komapc/apertium-ido-epo](https://github.com/komapc/apertium-ido-epo) — bilingual rules
 - [komapc/vortaro](https://github.com/komapc/vortaro) — Ido-Esperanto dictionary webapp
+
+## License
+
+Code: MIT ([`LICENSE`](LICENSE)). The neural model is CC BY-NC 4.0, inherited from its NLLB-200 base model; see [ido-epo-llm](https://github.com/komapc/ido-epo-llm). The rule-based engine is [Apertium](https://www.apertium.org) (GPL).
