@@ -197,7 +197,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     setInflight((f) => ({ ...f, [engine]: false }))
     if (ok) {
       addEntry({ direction: q.direction, input: q.input, output: text, engine })
-      // GA4 (only live after consent): direction, size and engine, never the text itself
+      // GA4 (live once the shared consent script loads GA): direction, size and engine, never the text itself
       gtag('event', 'translate', { direction: q.direction, chars: q.input.length, engine, mode: effMode })
     }
   }

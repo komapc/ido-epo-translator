@@ -12,7 +12,8 @@ const Footer = ({ lang }: FooterProps) => {
       contact: 'Kontakto',
       about: 'Pri la projekto',
       code: 'kodo',
-      report: 'Raportar eroro'
+      report: 'Raportar eroro',
+      analytics: 'Google Analytics'
     },
     en: {
       projects: 'My projects',
@@ -20,7 +21,8 @@ const Footer = ({ lang }: FooterProps) => {
       contact: 'Contact',
       about: 'About the project',
       code: 'code',
-      report: 'Report a translation error'
+      report: 'Report a translation error',
+      analytics: 'Analytics settings'
     },
     eo: {
       projects: 'Miaj projektoj',
@@ -28,7 +30,8 @@ const Footer = ({ lang }: FooterProps) => {
       contact: 'Kontakto',
       about: 'Pri la projekto',
       code: 'kodo',
-      report: 'Raporti tradukeraron'
+      report: 'Raporti tradukeraron',
+      analytics: 'Google Analytics'
     }
   }
 
@@ -43,6 +46,9 @@ const Footer = ({ lang }: FooterProps) => {
           <a href="https://vortaro.lipu.dev/" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a>
           <span className="opacity-30">·</span>
           <a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">{t.code}</a>
+          <span className="opacity-30">·</span>
+          {/* Reopens the shared consent banner (https://geo.lipu.dev/consent.js). */}
+          <a href="#" data-lipu-consent-open className="text-white font-semibold hover:text-white transition-colors">{t.analytics}</a>
         </div>
         
         <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
