@@ -1,6 +1,9 @@
 // Cloudflare Pages _worker.js for Ido-Esperanto Translator
 // Handles API routes and serves static assets from Pages ASSETS binding
 
+// Longest text /api/translate forwards to APy (same cap as /api/neural/translate's body).
+const MAX_TRANSLATE_CHARS = 8000
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -268,7 +271,8 @@ export default {
           }))
           return sendJson(200, { appVersion: VERSION, repos: results })
         } catch (e) {
-          return sendJson(500, { error: 'Failed to fetch versions', details: e?.message })
+          console.error('versions failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Failed to fetch versions' })
         }
       }
 
@@ -278,8 +282,14 @@ export default {
       if (subpath === '/neural/health' || subpath === '/neural/translate') {
         const NEURAL_URL = (env.NEURAL_URL || 'https://neural-891951053659.us-central1.run.app').replace(/\/$/, '')
         if (!env.NEURAL_KEY) return sendJson(503, { error: 'Server translation is not available' })
+        // Browsers always send Origin on a POST, and the site's own fetches come from this host,
+        // so a POST without a same-host Origin is not the site (a deterrent, not authentication).
+        // Same-origin GETs may omit Origin, so /neural/health (it only says "up") allows that.
+        // "Origin: null" and other unparsable values count as a foreign origin.
         const origin = request.headers.get('Origin')
-        if (origin && new URL(origin).host !== url.host) return sendJson(403, { error: 'Forbidden' })
+        let sameOrigin = false
+        try { sameOrigin = !!origin && new URL(origin).host === url.host } catch { sameOrigin = false }
+        if (!sameOrigin && (origin || request.method !== 'GET')) return sendJson(403, { error: 'Forbidden' })
         const headers = { 'x-neural-key': env.NEURAL_KEY }
         try {
           if (subpath === '/neural/health') {
@@ -320,8 +330,11 @@ export default {
             langpair = direction === 'ido-epo' ? 'ido|epo' : 'epo|ido'
           }
 
-          if (!text || !langpair) {
+          if (typeof text !== 'string' || !text || typeof langpair !== 'string' || !langpair) {
             return sendJson(400, { error: 'Missing text or langpair' })
+          }
+          if (text.length > MAX_TRANSLATE_CHARS) {
+            return sendJson(413, { error: `Text too long (max ${MAX_TRANSLATE_CHARS} characters)` })
           }
 
           const res = await fetch(`${APY_SERVER_URL}/translate`, {
@@ -331,13 +344,10 @@ export default {
           })
 
           if (!res.ok) {
-            const errorText = await res.text().catch(() => 'No error body')
-            return sendJson(502, {
-              error: 'Translation service error',
-              details: `APY server returned ${res.status}`,
-              apyUrl: APY_SERVER_URL,
-              errorBody: errorText,
-            })
+            // Upstream details stay in the worker log; the client gets a generic message.
+            const errorText = await res.text().catch(() => '')
+            console.error(`APy /translate returned ${res.status}: ${errorText.slice(0, 500)}`)
+            return sendJson(502, { error: 'Translation service error' })
           }
 
           const data = await res.json()
@@ -347,7 +357,8 @@ export default {
             targetLanguage: langpair.split('|')[1],
           })
         } catch (e) {
-          return sendJson(500, { error: 'Translation service unavailable', details: e?.message })
+          console.error('translate failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Translation service unavailable' })
         }
       }
 
