@@ -81,7 +81,7 @@ const readJson = async (res: Response): Promise<any> => {
 
 const describeFailure = (res: Response, data: any, fallback: string): string => {
     if (res.status === 401) return 'Wrong admin password'
-    const main = data?.webhookError || data?.error || fallback
+    const main = data?.error || fallback
     const extra = data?.hint || data?.details
     return extra ? `${main}: ${extra}` : main
 }
