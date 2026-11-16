@@ -6,8 +6,9 @@
 //   MODEL_DIR    folder with the komapc/nllb-ido-multi-onnx layout (default ./model)
 //   PORT         default 8080
 //   MAX_CHARS    longest accepted text (default 1000)
-//   SHARED_KEY   if set, requests must send it in the x-neural-key header (the Cloudflare
-//                Worker adds it; the service is not meant to be called directly)
+//   SHARED_KEY   required: POST /translate must send it in the x-neural-key header (the
+//                Cloudflare Worker adds it; the service is not meant to be called directly).
+//                Without it every /translate answers 503 (fail closed); /health still answers.
 //   THREADS      onnxruntime intra-op threads; set it to the vCPU count (the default, all host
 //                cores, oversubscribes a CPU quota and runs ~2x slower)
 //   BUDGET_SEC   translation seconds allowed per UTC day (default 2400); then 429 until midnight.
@@ -16,6 +17,7 @@
 //   MAX_QUEUE    requests allowed to wait behind the running one (default 4); more get 429
 // Request text is never logged.
 import http from 'node:http'
+import crypto from 'node:crypto'
 import path from 'node:path'
 import { env, AutoTokenizer, AutoModelForSeq2SeqLM, Tensor } from '@huggingface/transformers'
 
@@ -23,6 +25,11 @@ const MODEL_DIR = path.resolve(process.env.MODEL_DIR ?? './model')
 const PORT = Number(process.env.PORT ?? 8080)
 const MAX_CHARS = Number(process.env.MAX_CHARS ?? 1000)
 const SHARED_KEY = process.env.SHARED_KEY ?? ''
+if (!SHARED_KEY) console.error('SHARED_KEY is not set: /translate will answer 503 to every request')
+// Constant-time key check: hash both sides so the buffers have equal length.
+const sha256 = (v) => crypto.createHash('sha256').update(String(v ?? '')).digest()
+const KEY_HASH = sha256(SHARED_KEY)
+const keyOk = (v) => !!SHARED_KEY && typeof v === 'string' && crypto.timingSafeEqual(sha256(v), KEY_HASH)
 const BUDGET_SEC = Number(process.env.BUDGET_SEC ?? 2400)
 const MAX_QUEUE = Number(process.env.MAX_QUEUE ?? 4)
 const IDO_SUBFOLDER = 'onnx_ido_v2' // keep in sync with src/neural/protocol.ts
@@ -94,7 +101,8 @@ const send = (res, code, body) => {
 http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { ok: true })
   if (req.method !== 'POST' || req.url !== '/translate') return send(res, 404, { error: 'not found' })
-  if (SHARED_KEY && req.headers['x-neural-key'] !== SHARED_KEY) return send(res, 403, { error: 'forbidden' })
+  if (!SHARED_KEY) return send(res, 503, { error: 'not configured' })
+  if (!keyOk(req.headers['x-neural-key'])) return send(res, 403, { error: 'forbidden' })
   let body = ''
   req.setEncoding('utf8')
   req.on('data', (c) => { body += c; if (body.length > MAX_CHARS * 4 + 200) req.destroy() })
