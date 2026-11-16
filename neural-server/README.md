@@ -21,7 +21,8 @@ gcloud run deploy neural --project=ido-translator --region=us-central1 \
   --cpu=2 --memory=3Gi --concurrency=8 --min-instances=0 --max-instances=1 \
   --timeout=300 --cpu-boost \
   --update-env-vars=THREADS=2,MAX_CHARS=1000,BUDGET_SEC=2400,MAX_QUEUE=4
-# SHARED_KEY is set once (--update-env-vars=SHARED_KEY=...) and kept by later deploys.
+# SHARED_KEY is required (without it /translate answers 503). It is set once
+# (--update-env-vars=SHARED_KEY=...) and kept by later deploys.
 ```
 
 - **Memory.** 2 GiB is not enough: on Cloud Run the process peaks at ~2.2 GB and is killed.
