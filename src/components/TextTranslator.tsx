@@ -183,7 +183,8 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         body: JSON.stringify({ text: q.input, direction: q.direction }),
       })
       const data = await response.json()
-      return data.translation ? { text: data.translation, ok: true } : { text: 'Translation failed', ok: false }
+      if (data.translation) return { text: data.translation, ok: true }
+      return { text: response.status === 413 && data.error ? `Error: ${data.error}` : 'Translation failed', ok: false }
     } catch (error) {
       console.error('Translation error:', error)
       return { text: 'Error: Could not connect to translation service', ok: false }
