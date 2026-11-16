@@ -105,10 +105,14 @@ export default {
 
       // The webhook answers build/rebuild immediately; waiting longer means it is down.
       const WEBHOOK_START_TIMEOUT_MS = 15000
-      const webhookErrorText = (text) => {
-        try { return JSON.parse(text)?.error || null } catch { return null }
+      // Upstream webhook bodies and exception messages go to the worker log
+      // only; clients get a generic message plus the upstream HTTP status.
+      const logUpstream = (route, status, text) =>
+        console.error(`${route}: webhook returned ${status}: ${String(text ?? '').slice(0, 2000)}`)
+      const webhookBusy = (route, text) => {
+        logUpstream(route, 409, text)
+        return sendJson(409, { error: 'Another operation is in progress' })
       }
-      const webhookBusy = (text) => sendJson(409, { error: webhookErrorText(text) || 'Another operation is in progress' })
 
       if (request.method === 'GET' && subpath === '/admin/operation') {
         try {
@@ -120,11 +124,13 @@ export default {
             signal: AbortSignal.timeout(5000),
           })
           if (!webhookRes.ok) {
+            logUpstream('admin/operation', webhookRes.status, await webhookRes.text().catch(() => ''))
             return sendJson(502, { error: 'Failed to fetch build progress', webhookStatus: webhookRes.status })
           }
           return sendJson(200, await webhookRes.json())
         } catch (e) {
-          return sendJson(500, { error: 'Build progress check failed', details: e?.message })
+          console.error('admin/operation failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Build progress check failed' })
         }
       }
 
@@ -147,6 +153,7 @@ export default {
           })
 
           if (!statusRes.ok) {
+            logUpstream('status', statusRes.status, await statusRes.text().catch(() => ''))
             return sendJson(502, {
               error: 'Failed to fetch EC2 status',
               details: `Status endpoint returned ${statusRes.status}`
@@ -156,7 +163,8 @@ export default {
           const data = await statusRes.json()
           return sendJson(200, data)
         } catch (e) {
-          return sendJson(500, { error: 'Status check failed', details: e?.message })
+          console.error('status failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Status check failed' })
         }
       }
 
@@ -386,12 +394,12 @@ export default {
             body: JSON.stringify({ repo, trigger: 'web-ui' }),
           })
           const text = await webhookRes.text().catch(() => '')
-          if (webhookRes.status === 409) return webhookBusy(text)
+          if (webhookRes.status === 409) return webhookBusy('admin/pull-repo', text)
           if (!webhookRes.ok) {
+            logUpstream('admin/pull-repo', webhookRes.status, text)
             return sendJson(502, {
               error: 'Failed to trigger repository pull',
-              details: webhookErrorText(text) || `Webhook returned ${webhookRes.status}`,
-              body: text?.slice(0, 2000),
+              details: `Webhook returned ${webhookRes.status}`,
             })
           }
           // Try parse JSON, else wrap as text
@@ -399,7 +407,8 @@ export default {
           try { responseBody = JSON.parse(text) } catch { responseBody = { status: 'ok', log: text?.slice(0, 5000) } }
           return sendJson(200, { status: 'success', repo, ...responseBody })
         } catch (e) {
-          return sendJson(500, { error: 'Pull trigger failed', details: e?.message })
+          console.error('admin/pull-repo failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Pull trigger failed' })
         }
       }
 
@@ -425,27 +434,19 @@ export default {
             signal: AbortSignal.timeout(WEBHOOK_START_TIMEOUT_MS),
           })
           const text = await webhookRes.text().catch(() => '')
-          if (webhookRes.status === 409) return webhookBusy(text)
-
-          // Try to extract structured error information from the webhook response
-          let parsedError = null
-          try {
-            parsedError = JSON.parse(text)
-          } catch { }
+          if (webhookRes.status === 409) return webhookBusy('admin/build-repo', text)
 
           if (!webhookRes.ok) {
-            const bodySnippet = text?.slice(0, 2000) || ''
-            const diskSpaceHint = bodySnippet.includes('No space left on device')
-              ? 'Server may be out of disk space. Check EC2 disk usage (df -h) and /var/log/apertium-rebuild.log.'
+            logUpstream('admin/build-repo', webhookRes.status, text)
+            // A fixed, worker-authored hint; the matched webhook text itself stays in the log.
+            const diskSpaceHint = text?.includes('No space left on device')
+              ? 'Server may be out of disk space; see the rebuild log on the server.'
               : undefined
 
             return sendJson(502, {
               error: 'Failed to trigger repository build',
               details: `Webhook returned ${webhookRes.status} for repo "${repo}"`,
               webhookStatus: webhookRes.status,
-              webhookBody: bodySnippet,
-              ...(parsedError?.error && { webhookError: parsedError.error }),
-              ...(parsedError?.log && { webhookLogTail: String(parsedError.log).slice(-1000) }),
               ...(diskSpaceHint && { hint: diskSpaceHint }),
             })
           }
@@ -454,7 +455,8 @@ export default {
           try { responseBody = JSON.parse(text) } catch { responseBody = { status: 'ok', log: text?.slice(0, 5000) } }
           return sendJson(202, { status: 'accepted', repo, message: 'Build started successfully', ...responseBody })
         } catch (e) {
-          return sendJson(500, { error: 'Build trigger failed', details: e?.message })
+          console.error('admin/build-repo failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Build trigger failed' })
         }
       }
 
@@ -473,12 +475,12 @@ export default {
             signal: AbortSignal.timeout(WEBHOOK_START_TIMEOUT_MS),
           })
           const text = await webhookRes.text().catch(() => '')
-          if (webhookRes.status === 409) return webhookBusy(text)
+          if (webhookRes.status === 409) return webhookBusy('admin/rebuild', text)
           if (!webhookRes.ok) {
+            logUpstream('admin/rebuild', webhookRes.status, text)
             return sendJson(502, {
               error: 'Failed to trigger EC2 rebuild',
               details: `Webhook returned ${webhookRes.status}`,
-              body: text?.slice(0, 2000),
             })
           }
           // Try parse JSON, else wrap as text
@@ -486,7 +488,8 @@ export default {
           try { body = JSON.parse(text) } catch { body = { status: 'ok', log: text?.slice(0, 5000) } }
           return sendJson(202, { status: 'accepted', ...body })
         } catch (e) {
-          return sendJson(500, { error: 'Rebuild trigger failed', details: e?.message })
+          console.error('admin/rebuild failed:', e?.message ?? e)
+          return sendJson(500, { error: 'Rebuild trigger failed' })
         }
       }
 
