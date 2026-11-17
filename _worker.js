@@ -205,14 +205,12 @@ export default {
             const base = `https://api.github.com/repos/${owner}/${repo}`
             // Try latest release first
             let version = null, buildDate = null, lastCommitDate = null, latestHash = null
-            let ok = false
             try {
               const rel = await fetch(`${base}/releases/latest`, { headers: ghHeaders })
               if (rel.ok) {
                 const r = await rel.json()
                 version = r.tag_name || r.name || null
                 buildDate = r.published_at || r.created_at || null
-                ok = true
               }
             } catch { }
 
@@ -295,7 +293,7 @@ export default {
         // Same-origin GETs may omit Origin, so /neural/health (it only says "up") allows that.
         // "Origin: null" and other unparsable values count as a foreign origin.
         const origin = request.headers.get('Origin')
-        let sameOrigin = false
+        let sameOrigin
         try { sameOrigin = !!origin && new URL(origin).host === url.host } catch { sameOrigin = false }
         if (!sameOrigin && (origin || request.method !== 'GET')) return sendJson(403, { error: 'Forbidden' })
         const headers = { 'x-neural-key': env.NEURAL_KEY }

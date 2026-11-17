@@ -70,6 +70,7 @@ const adminFetch = async (path: string, body?: unknown): Promise<Response> => {
 }
 
 // Cloudflare timeouts and other gateway failures come back as HTML, not JSON.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- arbitrary JSON from the admin API
 const readJson = async (res: Response): Promise<any> => {
     const text = await res.text()
     try {
@@ -79,6 +80,7 @@ const readJson = async (res: Response): Promise<any> => {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- arbitrary JSON from the admin API
 const describeFailure = (res: Response, data: any, fallback: string): string => {
     if (res.status === 401) return 'Wrong admin password'
     const main = data?.error || fallback
