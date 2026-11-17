@@ -1,84 +1,38 @@
-import { Info } from 'lucide-react'
-
 interface FooterProps {
   lang: 'io' | 'en' | 'eo'
+  onOpenDictionaries: () => void
 }
 
-const Footer = ({ lang }: FooterProps) => {
-  const translations = {
-    io: {
-      projects: 'Mea projekti',
-      resources: 'Resursi',
-      contact: 'Kontakto',
-      about: 'Pri la projekto',
-      code: 'kodo',
-      report: 'Raportar eroro',
-      analytics: 'Google Analytics'
-    },
-    en: {
-      projects: 'My projects',
-      resources: 'Resources',
-      contact: 'Contact',
-      about: 'About the project',
-      code: 'code',
-      report: 'Report a translation error',
-      analytics: 'Analytics settings'
-    },
-    eo: {
-      projects: 'Miaj projektoj',
-      resources: 'Rimedoj',
-      contact: 'Kontakto',
-      about: 'Pri la projekto',
-      code: 'kodo',
-      report: 'Raporti tradukeraron',
-      analytics: 'Google Analytics'
-    }
-  }
+const STRINGS = {
+  io: { dictionaries: 'Vortari', code: 'GitHub', report: 'Raportar eroro', analytics: 'Google Analytics' },
+  en: { dictionaries: 'Dictionaries', code: 'GitHub', report: 'Report a translation error', analytics: 'Analytics settings' },
+  eo: { dictionaries: 'Vortaroj', code: 'GitHub', report: 'Raporti tradukeraron', analytics: 'Google Analytics' },
+}
 
-  const t = translations[lang] || translations.io
+// Every link appears once on the page: Vortaro and About live in the top bar,
+// everything else is here.
+const Footer = ({ lang, onOpenDictionaries }: FooterProps) => {
+  const t = STRINGS[lang] || STRINGS.en
+  const link = 'hover:text-white transition-colors'
 
   return (
-    <footer className="mt-16 pt-10 pb-10 border-t border-white/10 text-white/70 text-center text-sm">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-3">
-          <a href="https://lipu.dev/" className="text-white font-semibold hover:text-white transition-colors">lipu.dev</a>
-          <span className="opacity-30">·</span>
-          <a href="https://vortaro.lipu.dev/" className="text-white font-semibold hover:text-white transition-colors">Vortaro</a>
-          <span className="opacity-30">·</span>
-          <a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">{t.code}</a>
-          <span className="opacity-30">·</span>
-          {/* Reopens the shared consent banner (https://geo.lipu.dev/consent.js). */}
-          <a href="#" data-lipu-consent-open className="text-white font-semibold hover:text-white transition-colors">{t.analytics}</a>
-        </div>
-        
-        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
-          <span className="opacity-80">{t.resources}:</span>
-          <a href="https://github.com/apertium" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">Apertium</a>
-          <span className="text-xs opacity-50 -ml-3">(Apertium-based)</span>
-          
-          <span className="opacity-30">·</span>
-          <span>{t.contact}: <a href="https://github.com/komapc" target="_blank" rel="noopener noreferrer" className="text-white font-semibold hover:text-white transition-colors">GitHub</a></span>
-          
-          <span className="opacity-30">·</span>
-          <a
-            href="https://github.com/komapc/apertium-ido-epo/issues/new?labels=translation&title=Translation%20error%3A%20"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white font-semibold hover:text-white transition-colors"
-          >
-            {t.report}
-          </a>
-
-          <span className="opacity-30">·</span>
-          <a
-            href={`/about-${lang}`}
-            className="text-white font-semibold hover:text-white transition-colors flex items-center gap-1"
-          >
-            <Info className="w-3.5 h-3.5" /> {t.about}
-          </a>
-          
-          <span className="bg-white/10 px-2 py-0.5 rounded font-mono text-[10px] opacity-60">v{import.meta.env.VITE_APP_VERSION || '1.0.0'}</span>
-        </div>
+    <footer className="mt-16 py-6 border-t border-white/10 text-white/60 text-sm">
+      <div className="container mx-auto px-4 flex flex-wrap justify-center items-center gap-x-5 gap-y-2">
+        <a href="https://lipu.dev/" className={`${link} font-semibold text-white/80`}>lipu.dev</a>
+        <a href="https://echodrift.lipu.dev" className={link}>EchoDrift</a>
+        <a
+          href="https://github.com/komapc/apertium-ido-epo/issues/new?labels=translation&title=Translation%20error%3A%20"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={link}
+        >
+          {t.report}
+        </a>
+        <button onClick={onOpenDictionaries} className={link}>{t.dictionaries}</button>
+        <a href="https://github.com/komapc/ido-epo-translator" target="_blank" rel="noopener noreferrer" className={link}>{t.code}</a>
+        {/* Reopens the shared consent banner (https://geo.lipu.dev/consent.js). */}
+        <a href="#" data-lipu-consent-open className={link}>{t.analytics}</a>
+        <span className="font-mono text-xs text-white/40">v{import.meta.env.VITE_APP_VERSION || '1.0.0'}</span>
       </div>
     </footer>
   )
