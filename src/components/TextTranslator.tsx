@@ -63,11 +63,14 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     cachedParts().then((cached) => {
       if (partsFor(direction).every((p) => cached.includes(p))) neural.load()
     })
+    // `neural` is a new object each render; only these members matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effMode, direction, neural.status, neural.load])
 
   // Server mode was chosen (now or on an earlier visit): start the server while the user types.
   useEffect(() => {
     if (effMode !== 'apertium' && neural.backend === 'server') neural.wake()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effMode, neural.backend, neural.wake])
 
   const chooseMode = (m: Mode) => {

@@ -1,6 +1,6 @@
 name = "ido-epo-translator"
 main = "_worker.js"  # Worker entry (serves API + static assets)
-compatibility_date = "2024-09-23"
+compatibility_date = "2026-11-17"
 
 # Static assets binding for Workers (serves files from Vite build output)
 [assets]
