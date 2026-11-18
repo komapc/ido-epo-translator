@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Loader2, Copy, CheckCircle, Shuffle, Download, HelpCircle, Server } from 'lucide-react'
 import HistoryPanel from './HistoryPanel'
 import { useTranslationHistory, type HistoryEntry } from '../hooks/useTranslationHistory'
@@ -10,7 +10,7 @@ import CompareView, { type Vote } from './CompareView'
 type Engine = 'apertium' | 'neural'
 type Mode = Engine | 'both'
 const ENGINE_KEY = 'translator.engine'
-const MODES: readonly (readonly [Mode, string])[] = [['apertium', 'Apertium (rules)'], ['neural', 'Neural β'], ['both', 'Compare both']]
+const MODES: readonly (readonly [Mode, string])[] = [['apertium', 'Apertium'], ['neural', 'Neural β'], ['both', 'Compare']]
 const enginesFor = (m: Mode): Engine[] => (m === 'both' ? ['apertium', 'neural'] : [m])
 
 /** What the user last asked to translate. `nonce` changes on every Translate click. */
@@ -27,9 +27,11 @@ const gtag = (...a: unknown[]) => (window as unknown as { gtag?: (...a: unknown[
 
 interface TextTranslatorProps {
   direction: Direction
+  /** Language picker and swap button, rendered at the start of the toolbar. */
+  languageBar: ReactNode
 }
 
-const TextTranslator = ({ direction }: TextTranslatorProps) => {
+const TextTranslator = ({ direction, languageBar }: TextTranslatorProps) => {
   const [inputText, setInputText] = useState('')
   const [request, setRequest] = useState<TranslateRequest | null>(null)
   const [results, setResults] = useState<Partial<Record<Engine, EngineResult>>>({})
@@ -120,6 +122,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
   }
 
   const qualityScore = calculateQualityScore(outputText)
+  const hasMarks = /[*@]/.test(outputText)
 
   // Parse output text and apply color coding
   const renderColoredOutput = (text: string) => {
@@ -247,77 +250,48 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
     if (apertiumOK && mode !== 'both' && mode !== engine) chooseMode(engine)
   }
 
+  const label = 'text-xs font-semibold uppercase tracking-wider text-white/60'
+
   return (
     <>
-    <div className="grid md:grid-cols-2 gap-6">
-      {/* Input Panel */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-white">
-            {LANG_NAME[srcLang]} Input
-          </h2>
-          <button
-            onClick={handleRandomArticle}
-            disabled={isLoadingArticle}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-all"
-            title={`Load random ${LANG_NAME[srcLang]} Wikipedia article`}
-          >
-            {isLoadingArticle ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Shuffle className="w-4 h-4" />
-            )}
-            Random article
-          </button>
-        </div>
-        <textarea
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={(e) => {
-            // Ctrl/Cmd+Enter translates, like most translator sites
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault()
-              if (!busy && inputText.trim() && !neuralBlocked) handleTranslate()
-            }
-          }}
-          placeholder={`Enter ${LANG_NAME[srcLang]} text here...`}
-          className="w-full h-36 sm:h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-          data-gramm="false"
-          aria-label="Input text to translate"
-        />
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm" role="radiogroup" aria-label="Translation engine">
-          <span className="text-white/70">Engine:</span>
-          {MODES.map(([value, label]) => {
+    {/* Toolbar: direction on the left, engine on the right */}
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+      {languageBar}
+      <div className="flex items-center gap-1">
+        <div className="inline-flex bg-white/10 rounded-lg p-1 text-sm" role="radiogroup" aria-label="Translation engine">
+          {MODES.map(([value, name]) => {
             const off = !apertiumOK && value !== 'neural'
             return (
-            <button
-              key={value}
-              role="radio"
-              aria-checked={effMode === value}
-              disabled={off}
-              onClick={() => chooseMode(value)}
-              title={off ? 'Apertium covers Ido ↔ Esperanto only' : undefined}
-              className={`px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                effMode === value ? 'bg-white/25 text-white font-medium' : 'bg-white/5 text-white/70 hover:bg-white/15'
-              }`}
-            >
-              {label}
-            </button>
+              <button
+                key={value}
+                role="radio"
+                aria-checked={effMode === value}
+                disabled={off}
+                onClick={() => chooseMode(value)}
+                title={off ? 'Apertium covers Ido ↔ Esperanto only' : undefined}
+                className={`px-3 py-1 rounded-md transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                  effMode === value ? 'bg-white/25 text-white font-medium shadow-sm' : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {name}
+              </button>
             )
           })}
-          <button
-            onClick={() => setShowEngineHelp((v) => !v)}
-            aria-expanded={showEngineHelp}
-            aria-controls="engine-help"
-            aria-label="What is the difference between the engines?"
-            title="What is the difference between the engines?"
-            className="p-1 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </button>
         </div>
+        <button
+          onClick={() => setShowEngineHelp((v) => !v)}
+          aria-expanded={showEngineHelp}
+          aria-controls="engine-help"
+          aria-label="What is the difference between the engines?"
+          title="What is the difference between the engines?"
+          className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
         {showEngineHelp && (
-          <div id="engine-help" className="mt-3 p-3 rounded-lg bg-white/5 border border-white/15 text-sm text-white/85 space-y-2">
+          <div id="engine-help" className="mb-3 p-3 rounded-lg bg-white/10 border border-white/15 text-sm text-white/85 space-y-2">
             <p>
               <b>Apertium (rules)</b> runs on our server. It uses a dictionary and grammar rules, so it is fast and
               predictable, and words it does not know are marked with <code>*</code>. It can sound stiff.
@@ -345,6 +319,41 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             </p>
           </div>
         )}
+
+    <div className="grid md:grid-cols-2 gap-4">
+      {/* Input Panel */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-xl">
+        <div className="flex justify-between items-center mb-2 min-h-8">
+          <h2 className={label}>{LANG_NAME[srcLang]}</h2>
+          <button
+            onClick={handleRandomArticle}
+            disabled={isLoadingArticle}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm rounded-md transition-all"
+            title={`Load random ${LANG_NAME[srcLang]} Wikipedia article`}
+          >
+            {isLoadingArticle ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Shuffle className="w-4 h-4" />
+            )}
+            Random article
+          </button>
+        </div>
+        <textarea
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={(e) => {
+            // Ctrl/Cmd+Enter translates, like most translator sites
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault()
+              if (!busy && inputText.trim() && !neuralBlocked) handleTranslate()
+            }
+          }}
+          placeholder={`Enter ${LANG_NAME[srcLang]} text here...`}
+          className="w-full h-36 sm:h-64 p-4 bg-white/5 border border-white/20 rounded-lg text-white text-[15px] leading-7 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+          data-gramm="false"
+          aria-label="Input text to translate"
+        />
         {!apertiumOK && (
           <p className="mt-3 text-sm text-white/70">
             {LANG_NAME[srcLang]} → {LANG_NAME[tgtLang]} is experimental and neural-only: Apertium covers Ido ↔ Esperanto.
@@ -369,11 +378,10 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             ) : (
               <>
                 <p className="mb-2">
-                  The neural translator (NLLB-200 fine-tuned for Ido) runs <b>in your browser</b>, so your text is not
-                  sent to any server. {neural.onlyIdoMissing
-                    ? <>Writing Ido needs one more part of the model, about {neural.missingMB} MB,</>
-                    : <>It needs a one-time download of about {neural.missingMB} MB,</>} which your browser
-                  then caches. It is often more fluent than Apertium, but it can make up words, so check names and numbers.{' '}
+                  Neural β runs <b>in your browser</b>: your text stays on your device.{' '}
+                  {neural.onlyIdoMissing
+                    ? <>Writing Ido needs one more part of the model (~{neural.missingMB} MB, cached).</>
+                    : <>One-time download, ~{neural.missingMB} MB, cached by the browser.</>}{' '}
                   <a className="underline" href="/about-en#neural">Learn more</a>
                 </p>
                 {neural.status === 'error' && <p className="mb-2 text-orange-300">Loading failed: {neural.error}</p>}
@@ -394,8 +402,8 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
                   </button>
                 </div>
                 <p className="mt-2 text-white/60">
-                  Our server runs the same model with no download. Your text is then sent to it (Google Cloud) for
-                  translation and is not stored or logged. After a quiet period it needs up to ~30 seconds to wake up.
+                  Our server: no download, but your text is sent to it (Google Cloud); it is not stored or logged.
+                  Waking up can take ~30 s.
                 </p>
               </>
             )}
@@ -412,7 +420,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
         <button
           onClick={handleTranslate}
           disabled={busy || !inputText.trim() || neuralBlocked}
-          className="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+          className="mt-3 w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:hover:bg-purple-600 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg shadow-purple-900/30 transition-all flex items-center justify-center gap-2"
           aria-label="Translate text"
           title="Ctrl+Enter"
         >
@@ -428,16 +436,16 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
       </div>
 
       {/* Output Panel */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-xl">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-xl">
+        <div className="flex justify-between items-center mb-2 min-h-8">
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold text-white">
-              {LANG_NAME[tgtLang]} Translation
+            <h2 className={label}>
+              {LANG_NAME[tgtLang]}
             </h2>
             {effMode !== 'both' && busy && <Loader2 className="w-5 h-5 animate-spin text-white/70" />}
             {outputText && outputEngine === 'neural' && (
               <div
-                className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-200"
+                className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-200"
                 title={neural.backend === 'server' ? 'Translated by the neural model on our server' : 'Translated by the neural model in your browser'}
               >
                 Neural β
@@ -445,7 +453,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             )}
             {outputText && outputEngine === 'apertium' && (
               <div 
-                className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                   qualityScore >= 95 
                     ? 'bg-green-500/20 text-green-300' 
                     : qualityScore >= 80 
@@ -461,13 +469,14 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
           {outputText && effMode !== 'both' && (
             <button
               onClick={handleCopy}
-              className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
+              className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-md transition-all"
               aria-label="Copy translation to clipboard"
+              title="Copy"
             >
               {copied ? (
-                <CheckCircle className="w-5 h-5 text-green-400" />
+                <CheckCircle className="w-4 h-4 text-green-400" />
               ) : (
-                <Copy className="w-5 h-5 text-white" />
+                <Copy className="w-4 h-4" />
               )}
             </button>
           )}
@@ -483,8 +492,8 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
             onVote={handleVote}
           />
         ) : (<>
-        {outputText && outputEngine === 'apertium' && (
-          <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+        {outputText && outputEngine === 'apertium' && hasMarks && (
+          <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
             <label className="flex items-center gap-2 cursor-pointer text-white/80 text-sm whitespace-nowrap">
               <input
                 type="checkbox"
@@ -493,7 +502,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
                 className="w-4 h-4 rounded border-white/20 bg-white/10 text-purple-600 focus:ring-2 focus:ring-purple-500"
                 aria-label="Toggle symbol display mode"
               />
-              Show symbols (*#@)
+              Show symbols (*@)
             </label>
             <div className="ml-auto flex items-center gap-3 text-xs text-white/70 whitespace-nowrap">
               <span className="flex items-center gap-1">
@@ -502,11 +511,7 @@ const TextTranslator = ({ direction }: TextTranslatorProps) => {
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-3 h-3 bg-orange-400 rounded"></span>
-                Gen. Error
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-3 bg-yellow-300 rounded"></span>
-                Ambiguous
+                Generation error
               </span>
             </div>
           </div>
