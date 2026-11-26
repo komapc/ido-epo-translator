@@ -28,6 +28,17 @@ const App = () => {
       const saved = window.localStorage.getItem(PARTNER_KEY)
       if (saved && isPartner(saved)) setPartner(saved)
     } catch { /* storage disabled */ }
+    // Landing pages link to /#ido-eng, /#eng-ido etc. to open that pair. A hash, not a
+    // query parameter: the worker reads ?dir= as an Apertium (Esperanto) direction.
+    // It wins over the saved partner for this visit and is then dropped from the URL,
+    // so a later reload doesn't undo a choice made in the menu.
+    const m = /^#(?:ido-(\w+)|(\w+)-ido)$/.exec(window.location.hash)
+    const p = m && (m[1] ?? m[2])
+    if (p && isPartner(p)) {
+      setPartner(p)
+      setIdoFirst(!!m[1])
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
   }, [])
 
   const choosePartner = (p: Partner) => {
@@ -70,10 +81,10 @@ const App = () => {
 
         <header className="text-center mb-5 sm:mb-6">
           <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1">
-            Ido ⟷ Esperanto Translator
+            Ido ⟷ Esperanto & English Translator
           </h1>
           <p className="text-white/70 text-sm sm:text-base">
-            Rule-based Apertium and a neural model · free and open source
+            Rule-based Apertium and a neural model · English, Spanish, French, German in beta · free and open source
           </p>
         </header>
 

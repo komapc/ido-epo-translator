@@ -17,7 +17,7 @@ const SeoContent = () => (
     aria-labelledby="about-translator-heading"
   >
     <h2 id="about-translator-heading" className="text-2xl font-bold text-white mb-3">
-      Free Ido–Esperanto machine translation
+      Free Ido–Esperanto and Ido–English machine translation
     </h2>
     <p className="mb-4">
       This is a free online translator between <strong>Ido</strong> and{' '}
@@ -26,7 +26,9 @@ const SeoContent = () => (
       is <a className="underline" href="https://apertium.org/">Apertium</a>, an open-source
       rule-based machine translation engine: results are predictable and every word can be
       traced back to a dictionary entry. The second, <strong>Neural β</strong>, is a neural
-      model that runs entirely in your browser.
+      model that runs entirely in your browser. The neural engine also translates between Ido
+      and <strong>English</strong>, Spanish, French or German (beta): pick the language next to
+      Ido above the input box.
     </p>
 
     <h2 id="neural" className="text-xl font-semibold text-white mb-2">Neural translation (beta)</h2>
@@ -69,14 +71,15 @@ const SeoContent = () => (
     <p className="mb-4 text-sm">
       More examples for each direction:{' '}
       <a className="underline" href="/ido-epo">Ido → Esperanto</a> ·{' '}
-      <a className="underline" href="/epo-ido">Esperanto → Ido</a>.
+      <a className="underline" href="/epo-ido">Esperanto → Ido</a> ·{' '}
+      <a className="underline" href="/ido-eng">Ido → English</a>.
     </p>
 
     <h2 className="text-xl font-semibold text-white mb-2">How to use it</h2>
     <ol className="list-decimal list-inside mb-4 space-y-1">
-      <li>Pick the direction with the swap button: Ido → Esperanto or Esperanto → Ido.</li>
+      <li>Pick the language next to Ido (Esperanto, English, Spanish, French or German) and the direction with the swap button.</li>
       <li>Type or paste your text into the input box.</li>
-      <li>Optionally pick the engine: Apertium (rules) or Neural β.</li>
+      <li>For Esperanto, optionally pick the engine: Apertium (rules) or Neural β; the other languages use Neural β.</li>
       <li>The translation appears next to it.</li>
     </ol>
 
