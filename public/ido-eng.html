@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ido to English Translator — free online translation (neural, beta)</title>
+    <meta name="description" content="Translate Ido text into English online for free with a neural model (NLLB-200 fine-tuned for Ido) that runs in your browser or on our server. Real examples.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="canonical" href="https://tradukilo.lipu.dev/ido-eng">
+    <link rel="stylesheet" href="/static.css">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tradukilo.lipu.dev/ido-eng">
+    <meta property="og:title" content="Ido to English Translator — free online translation (neural, beta)">
+    <meta property="og:description" content="Translate Ido text into English online for free with a neural model (NLLB-200 fine-tuned for Ido) that runs in your browser or on our server. Real examples.">
+    <meta property="og:image" content="https://tradukilo.lipu.dev/og-image.png">
+    <meta property="og:image:alt" content="Tradukilo — Ido ⇄ Esperanto Translator. Apertium machine translation, free">
+    <meta property="og:site_name" content="Tradukilo">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ido to English Translator — free online translation (neural, beta)">
+    <meta name="twitter:description" content="Translate Ido text into English online for free with a neural model (NLLB-200 fine-tuned for Ido) that runs in your browser or on our server. Real examples.">
+    <meta name="twitter:image" content="https://tradukilo.lipu.dev/og-image.png">
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Ido → English translator",
+    "url": "https://tradukilo.lipu.dev/ido-eng",
+    "description": "Translate Ido text into English for free with a neural model (NLLB-200 fine-tuned for Ido), in the browser or on our server. Experimental.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "browserRequirements": "Requires JavaScript",
+    "inLanguage": [
+        "io",
+        "en"
+    ],
+    "isAccessibleForFree": true,
+    "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+    },
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "Ido–Esperanto Translator",
+        "url": "https://tradukilo.lipu.dev/"
+    }
+}
+    </script>
+</head>
+<body>
+    <main class="card">
+        <h1>Ido → English translator</h1>
+        <p>Translate <strong>Ido</strong> text into <strong>English</strong> for free. The translation is done by a neural model,
+        NLLB-200 (600M parameters) fine-tuned for Ido, which runs in your browser or, if you prefer, on our server.
+        This language pair is in beta (experimental): check the result before you rely on it.</p>
+        <a class="cta" href="/#ido-eng">Open the translator (Ido → English)</a>
+
+        <h2>Examples</h2>
+        <table>
+            <tr><th>Ido</th><th>English</th></tr>
+            <tr><td lang="io">Me amas vu.</td><td lang="en">I love you.</td></tr><tr><td lang="io">La hundo manjas la pomo.</td><td lang="en">The dog eats the apple.</td></tr><tr><td lang="io">Ube esas la biblioteko?</td><td lang="en">Where is the library?</td></tr><tr><td lang="io">Me lernas Ido nun.</td><td lang="en">I'm learning Ido now.</td></tr><tr><td lang="io">Ni iros a la urbo morge.</td><td lang="en">We'll be going to town tomorrow.</td></tr><tr><td lang="io">Me ne komprenas to quon vu dicas.</td><td lang="en">I don't understand what you're saying.</td></tr><tr><td lang="io">Quante kustas ica biletto?</td><td lang="en">How much is this ticket?</td></tr><tr><td lang="io">Mea fratino laboras en hospitalo.</td><td lang="en">My sister works in a hospital.</td></tr><tr><td lang="io">La infanti ludas en la gardeno.</td><td lang="en">The children play in the garden.</td></tr><tr><td lang="io">Ido esas linguo internaciona kreita en 1907.</td><td lang="en">Ido is an international language created in 1907.</td></tr>
+        </table>
+        <p><small>Output shown is real output of the neural engine. It can change or invent words, so check names, numbers and rare terms, and review important text.</small></p>
+
+        <h2>How it works</h2>
+        <p>The neural engine is <a href="https://huggingface.co/komapc/nllb-ido-epo-600m">NLLB-200</a>, Meta's multilingual translation model,
+        fine-tuned for Ido on Ido–Esperanto sentence pairs. It reads Ido and writes English with the same model that writes Esperanto,
+        so it translates Ido to English directly, one sentence at a time.
+        There is no rule-based (Apertium) engine for English: Apertium covers only Ido ↔ Esperanto.</p>
+
+        <h2>In your browser or on our server</h2>
+        <p>The neural engine can run in two ways. You can download the model once (about 610 MB for Ido → English),
+        which your browser keeps for later visits; translation then happens on your device and your text is not sent anywhere.
+        Or you can run the same model on our server with no download: your text is then sent to it for translation and is not stored or logged.</p>
+
+        <h2>English → Ido</h2>
+        <p>The other direction works too: swap the languages in the translator. English → Ido goes through Esperanto
+        (English → Esperanto → Ido), which gave better results than translating directly, and needs a larger download
+        (about 990 MB) if you run it in your browser.</p>
+
+        <h2>Tips for better results</h2>
+        <p>Write whole, complete sentences: the model was trained on sentence pairs and works best on everyday sentences.
+        For a single Ido word with its part of speech and related forms, look it up in the
+        <a href="https://vortaro.lipu.dev/">Ido–Esperanto dictionary (Vortaro)</a>.</p>
+
+        <h2>More</h2>
+        <ul>
+            <li><a href="/ido-epo">Ido → Esperanto translator</a> (rule-based and neural)</li>
+            <li><a href="/epo-ido">Esperanto → Ido translator</a></li>
+            <li><a href="/about-en#neural">About the neural engine</a></li>
+            <li><a href="https://vortaro.lipu.dev/">Ido–Esperanto dictionary</a></li>
+        </ul>
+    </main>
+</body>
+</html>
