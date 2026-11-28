@@ -4,7 +4,7 @@ import TextTranslator from './components/TextTranslator'
 import DictionariesDialog from './components/DictionariesDialog'
 import Footer from './components/Footer'
 import SeoContent from './components/SeoContent'
-import { LANG_NAME, PARTNERS, isPartner, type Direction, type Partner } from './langs'
+import { LANG_NAME, PARTNERS, isPartner, pairFromHash, type Direction, type Partner } from './langs'
 
 const PARTNER_KEY = 'translator.partner'
 
@@ -32,11 +32,10 @@ const App = () => {
     // query parameter: the worker reads ?dir= as an Apertium (Esperanto) direction.
     // It wins over the saved partner for this visit and is then dropped from the URL,
     // so a later reload doesn't undo a choice made in the menu.
-    const m = /^#(?:ido-(\w+)|(\w+)-ido)$/.exec(window.location.hash)
-    const p = m && (m[1] ?? m[2])
-    if (p && isPartner(p)) {
-      setPartner(p)
-      setIdoFirst(!!m[1])
+    const pair = pairFromHash(window.location.hash)
+    if (pair) {
+      setPartner(pair.partner)
+      setIdoFirst(pair.idoFirst)
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
     }
   }, [])

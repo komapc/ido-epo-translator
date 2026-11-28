@@ -60,7 +60,7 @@ export default defineConfig([
 
   // Node scripts and servers
   {
-    files: ['scripts/**/*.{js,mjs,cjs}', 'public/**/*.cjs', 'neural-server/**/*.mjs', '*.config.js', 'webhook-server-no-docker.js', 'eslint.config.js'],
+    files: ['scripts/**/*.{js,mjs,cjs}', 'public/**/*.cjs', 'neural-server/**/*.mjs', '*.config.js', 'webhook-server-no-docker.js', 'eslint.config.js', 'test/**/*.js'],
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },
   },

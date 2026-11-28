@@ -34,6 +34,9 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      - name: Test
+        run: npm test
+
       - name: Read app version
         id: version
         run: echo "app_version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
