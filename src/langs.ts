@@ -25,3 +25,14 @@ export const splitDirection = (d: Direction) => d.split('-') as [Lang, Lang]
 export const isPartner = (s: string): s is Partner => (PARTNERS as readonly string[]).includes(s)
 /** Apertium (rules) exists only for Ido <-> Esperanto. */
 export const hasApertium = (d: Direction) => d === 'ido-epo' || d === 'epo-ido'
+
+/**
+ * The pair a landing-page link opens: "#ido-eng" is Ido -> English, "#eng-ido" the reverse.
+ * Null for any other hash, including unknown languages and "#ido-ido".
+ */
+export const pairFromHash = (hash: string): { partner: Partner; idoFirst: boolean } | null => {
+  const m = /^#(?:ido-(\w+)|(\w+)-ido)$/.exec(hash)
+  if (!m) return null
+  const p = m[1] ?? m[2]
+  return isPartner(p) ? { partner: p, idoFirst: m[1] !== undefined } : null
+}

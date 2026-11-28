@@ -12,6 +12,7 @@
     "cf:dev": "npx wrangler dev --assets dist",
     "cf:deploy": "npx wrangler deploy",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest run",
     "deploy": "npm run build && npx wrangler pages deploy dist --project-name ido-tradukilo"
   },
   "dependencies": {
@@ -34,6 +35,7 @@
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.73.0",
     "vite": "^8.3.8",
+    "vitest": "^5.1.2",
     "wrangler": "^4.164.0"
   }
 }
